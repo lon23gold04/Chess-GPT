@@ -523,7 +523,7 @@ def select_color(color):
             make_move(from_row, from_col, to_row, to_col)
     
     return render_template('index.html', 
-                         title='Chess Board',
+                         title='Chess GPT',
                          message=f'You are playing as {color}',
                          board=current_board,
                          player_color=color)
