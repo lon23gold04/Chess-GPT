@@ -2,19 +2,15 @@ from flask import Flask, render_template, jsonify, request
 import copy
 import requests
 import google.generativeai as genai
-from dotenv import load_dotenv
 import os
 
 app = Flask(__name__)
 
-# Load environment variables
-load_dotenv()
-
-# Configure Gemini API
-GEMINI_API_KEY = os.getenv('GEMINI_API_KEY')
+# Configure Gemini API using environment variable
+GEMINI_API_KEY = os.environ.get('GEMINI_API_KEY')
 
 if not GEMINI_API_KEY:
-    raise ValueError("Missing GEMINI_API_KEY environment variable. Please check your .env file.")
+    raise ValueError("Missing GEMINI_API_KEY environment variable. Please export GEMINI_API_KEY='your_key_here'")
 
 genai.configure(api_key=GEMINI_API_KEY)
 model = genai.GenerativeModel('gemini-2.0-flash')
