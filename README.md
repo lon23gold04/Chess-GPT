@@ -10,13 +10,16 @@ A web-based chess game with AI opponent powered by chess-api.com and move analys
    pip install -r requirements.txt
    ```
 
-3. Set up environment variables:
-   - Copy `.env.example` to `.env`:
-     ```bash
-     cp .env.example .env
-     ```
-   - Edit `.env` and add your Gemini API key:
-     - `GEMINI_API_KEY`: Get from [Google AI Studio](https://makersuite.google.com/app/apikey)
+3. Set up environment variable:
+   ```bash
+   # Add this to your ~/.bashrc or ~/.zshrc for persistence
+   export GEMINI_API_KEY='your_gemini_api_key_here'
+   
+   # Or set it temporarily for the current session
+   export GEMINI_API_KEY='your_gemini_api_key_here'
+   ```
+   
+   Get your Gemini API key from [Google AI Studio](https://makersuite.google.com/app/apikey)
 
 4. Run the application:
    ```bash
@@ -38,4 +41,4 @@ A web-based chess game with AI opponent powered by chess-api.com and move analys
 
 ## Security Note
 
-The `.env` file containing your API keys is included in `.gitignore` and should never be committed to version control. Always keep your API keys private. 
+Keep your API keys private and never commit them to version control. Using environment variables helps keep sensitive information secure. 
