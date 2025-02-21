@@ -1,8 +1,29 @@
-# AI Chess Game
+# Chess GPT
+
+[![MIT License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+[![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)](https://github.com/EN10/Chess/releases)
+[![Python 3.9+](https://img.shields.io/badge/python-3.9+-blue.svg)](https://www.python.org/downloads/)
+[![Commit](https://img.shields.io/badge/commit-0de07d5-orange.svg)](https://github.com/EN10/Chess/commit/0de07d5)
 
 A sophisticated web-based chess application featuring an AI opponent and real-time move analysis. Play against a strong chess engine while receiving strategic insights from Google's Gemini AI.
 
-![Chess Game Screenshot]
+[🎮 Play Now](https://chess-gpt.vercel.app) | [📖 Documentation](https://github.com/EN10/Chess/wiki)
+
+<div align="center">
+  <img src="https://raw.githubusercontent.com/EN10/Chess-GPT/refs/heads/main/image.png" width="400" alt="Chess Game Screenshot">
+</div>
+
+## Table of Contents
+- [Key Features](#key-features)
+- [Quick Start](#quick-start)
+- [How to Play](#how-to-play)
+- [Technical Details](#technical-details)
+- [Development](#development)
+- [Troubleshooting](#troubleshooting)
+- [Future Enhancements](#future-enhancements)
+- [Contributing](#contributing)
+- [License](#license)
+- [Acknowledgments](#acknowledgments)
 
 ## Key Features
 
@@ -103,6 +124,14 @@ A sophisticated web-based chess application featuring an AI opponent and real-ti
 - Vanilla JavaScript frontend
 - Responsive CSS with flexbox/grid
 - WebSocket-ready for future real-time features
+- Vercel serverless deployment
+
+### Deployment
+- Automatic deployment via Vercel
+- Serverless Python runtime
+- Auto-scaling and high availability
+- Global CDN distribution
+- Zero-configuration setup
 
 ### Security
 - Environment-based API key management
@@ -120,6 +149,7 @@ chess-game/
 ├── templates/         
 │   ├── index.html     # Game interface
 │   └── color_select.html # Color selection page
+├── vercel.json        # Vercel deployment config
 └── README.md
 ```
 
@@ -159,9 +189,18 @@ chess-game/
 - [ ] Sound effects
 - [ ] Touch device optimizations
 
+## Version History
+
+### v1.0.0
+- Initial release
+- Complete chess game implementation
+- AI opponent integration
+- Gemini-powered move analysis
+- Vercel deployment setup
+
 ## Contributing
 
-Contributions are welcome! Please feel free to:
+We welcome contributions! Here's how you can help:
 - Report bugs
 - Suggest features
 - Submit pull requests
@@ -175,4 +214,4 @@ This project is open source and available under the MIT License.
 
 - Chess API provided by [chess-api.com](https://chess-api.com)
 - Move analysis powered by [Google Gemini AI](https://makersuite.google.com)
-- Chess piece Unicode characters for the game board 
+- Chess piece Unicode characters for the game board
