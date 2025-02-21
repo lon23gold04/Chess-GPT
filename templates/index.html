@@ -399,6 +399,7 @@
         let selectedPiece = null;      // Currently selected chess piece
         let selectedSquare = null;     // Square containing the selected piece
         let isGameOver = false;        // Track if the game has ended
+        let canPlayerMove = true;      // Track if the player can make a move
         const playerColor = document.querySelector('.chess-board').dataset.playerColor;  // Player's chosen color (white/black)
 
         /**
@@ -451,6 +452,12 @@
             } 
             // Second click - Moving the piece
             else {
+                // Prevent making the move if AI is thinking
+                if (!canPlayerMove) {
+                    showMoveStatus('Please wait for Black to make a move before proceeding.', false);
+                    return;
+                }
+
                 // Clicking the same square deselects the piece
                 if (clickedSquare === selectedSquare) {
                     clearSelection();
@@ -630,6 +637,7 @@
             // Show AI thinking indicator with delay
             const thinkingTimeout = setTimeout(() => {
                 showAIThinking();
+                canPlayerMove = false;  // Disable player moves while AI is thinking
             }, 500);
 
             // Send move to server for validation and AI response
@@ -650,6 +658,7 @@
                 // Hide AI thinking indicator
                 clearTimeout(thinkingTimeout);
                 hideAIThinking();
+                canPlayerMove = true;  // Re-enable player moves after AI responds
 
                 if (data.valid) {
                     handleValidMove(data);
