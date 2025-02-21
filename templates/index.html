@@ -463,6 +463,14 @@
                 const toRow = parseInt(clickedSquare.dataset.row);
                 const toCol = parseInt(clickedSquare.dataset.col);
 
+                // Check if the destination square is empty
+                const destinationPiece = clickedSquare.querySelector('.piece').textContent.trim();
+                if (destinationPiece !== '') {
+                    showMoveStatus('Invalid move! The destination square is occupied.', false);
+                    clearSelection();
+                    return;
+                }
+
                 makeMove(fromRow, fromCol, toRow, toCol, selectedPiece, clickedSquare.querySelector('.piece'));
                 clearSelection();
             }
@@ -477,147 +485,147 @@
          * @param {Element} fromPiece - Piece being moved
          * @param {Element} toPiece - Piece at target square (if any)
          */
-function isCastlingAttempt(fromPiece, fromCol, toCol) {
-    return get_piece_type(fromPiece.textContent) === 'king' && Math.abs(toCol - fromCol) === 2;
-}
-
-function isPathClear(row, fromCol, toCol) {
-    const step = fromCol < toCol ? 1 : -1;
-    for (let col = fromCol + step; col !== toCol; col += step) {
-        const square = document.querySelector(`.square[data-row="${row}"][data-col="${col}"]`);
-        if (square.querySelector('.piece').textContent.trim() !== '') {
-            return false;
-        }
-    }
-    return true;
-}
-
-function get_piece_type(piece) {
-    const pieceTypes = {
-        '♔': 'king', '♚': 'king',
-        '♕': 'queen', '♛': 'queen',
-        '♖': 'rook', '♜': 'rook',
-        '♗': 'bishop', '♝': 'bishop',
-        '♘': 'knight', '♞': 'knight',
-        '♙': 'pawn', '♟': 'pawn'
-    };
-    return pieceTypes[piece] || null;
-}
-
-function makeMove(fromRow, fromCol, toRow, toCol, fromPiece, toPiece) {
-    // Store original board state for move reversal if needed
-    const originalFromContent = fromPiece.textContent;
-    const originalToContent = toPiece.textContent;
-
-    // Check if this is a castling attempt
-    const isCastling = isCastlingAttempt(fromPiece, fromCol, toCol);
-    
-    let castlingState = null;
-    if (isCastling) {
-        // Quick frontend validation for castling
-        const isQueenside = toCol < fromCol;
-        const rookCol = isQueenside ? 0 : 7;
-        const rookSquare = document.querySelector(`.square[data-row="${fromRow}"][data-col="${rookCol}"]`);
-        const rookPiece = rookSquare.querySelector('.piece');
-        const expectedRook = playerColor === 'white' ? '♖' : '♜';
-        
-        if (rookPiece.textContent !== expectedRook || !isPathClear(fromRow, fromCol, toCol)) {
-            showMoveStatus('Invalid castling move! Path must be clear.', false);
-            return;
+        function isCastlingAttempt(fromPiece, fromCol, toCol) {
+            return get_piece_type(fromPiece.textContent) === 'king' && Math.abs(toCol - fromCol) === 2;
         }
 
-        const newRookCol = toCol + (isQueenside ? 1 : -1);
-        const newRookSquare = document.querySelector(`.square[data-row="${fromRow}"][data-col="${newRookCol}"]`);
-        
-        // Store castling state for potential reversal
-        castlingState = {
-            rookSquare,
-            rookPiece,
-            newRookSquare,
-            originalKingContent: fromPiece.textContent,
-            originalKingSquareContent: '',
-            originalRookContent: rookPiece.textContent,
-            originalNewRookSquareContent: newRookSquare.querySelector('.piece').textContent
-        };
+        function isPathClear(row, fromCol, toCol) {
+            const step = fromCol < toCol ? 1 : -1;
+            for (let col = fromCol + step; col !== toCol; col += step) {
+                const square = document.querySelector(`.square[data-row="${row}"][data-col="${col}"]`);
+                if (square.querySelector('.piece').textContent.trim() !== '') {
+                    return false;
+                }
+            }
+            return true;
+        }
 
-        // Update UI for king with animation
-        fromPiece.style.transition = 'all 0.3s ease-out';
-        toPiece.style.transition = 'all 0.3s ease-out';
-        
-        fromPiece.style.opacity = '0';
-        toPiece.style.opacity = '0';
-        fromPiece.style.transform = 'translate(-50%, -50%) scale(0.8)';
-        toPiece.style.transform = 'translate(-50%, -50%) scale(1.2)';
-        
-        setTimeout(() => {
-            toPiece.textContent = fromPiece.textContent;
-            fromPiece.textContent = '';
-            
-            fromPiece.style.opacity = '1';
-            toPiece.style.opacity = '1';
-            fromPiece.style.transform = 'translate(-50%, -50%) scale(1)';
-            toPiece.style.transform = 'translate(-50%, -50%) scale(1)';
-            
-            setTimeout(() => {
-                fromPiece.style.transition = '';
-                toPiece.style.transition = '';
-                fromPiece.style.transform = 'translate(-50%, -50%)';
-                toPiece.style.transform = 'translate(-50%, -50%)';
-            }, 300);
-        }, 300);
+        function get_piece_type(piece) {
+            const pieceTypes = {
+                '♔': 'king', '♚': 'king',
+                '♕': 'queen', '♛': 'queen',
+                '♖': 'rook', '♜': 'rook',
+                '♗': 'bishop', '♝': 'bishop',
+                '♘': 'knight', '♞': 'knight',
+                '♙': 'pawn', '♟': 'pawn'
+            };
+            return pieceTypes[piece] || null;
+        }
 
-        // Update UI for rook with animation
-        rookPiece.style.transition = 'all 0.3s ease-out';
-        newRookSquare.querySelector('.piece').style.transition = 'all 0.3s ease-out';
-        
-        rookPiece.style.opacity = '0';
-        newRookSquare.querySelector('.piece').style.opacity = '0';
-        rookPiece.style.transform = 'translate(-50%, -50%) scale(0.8)';
-        newRookSquare.querySelector('.piece').style.transform = 'translate(-50%, -50%) scale(1.2)';
-        
-        setTimeout(() => {
-            newRookSquare.querySelector('.piece').textContent = rookPiece.textContent;
-            rookPiece.textContent = '';
+        function makeMove(fromRow, fromCol, toRow, toCol, fromPiece, toPiece) {
+            // Store original board state for move reversal if needed
+            const originalFromContent = fromPiece.textContent;
+            const originalToContent = toPiece.textContent;
+
+            // Check if this is a castling attempt
+            const isCastling = isCastlingAttempt(fromPiece, fromCol, toCol);
             
-            rookPiece.style.opacity = '1';
-            newRookSquare.querySelector('.piece').style.opacity = '1';
-            rookPiece.style.transform = 'translate(-50%, -50%) scale(1)';
-            newRookSquare.querySelector('.piece').style.transform = 'translate(-50%, -50%) scale(1)';
-            
-            setTimeout(() => {
-                rookPiece.style.transition = '';
-                newRookSquare.querySelector('.piece').style.transition = '';
-                rookPiece.style.transform = 'translate(-50%, -50%)';
-                newRookSquare.querySelector('.piece').style.transform = 'translate(-50%, -50%)';
-            }, 300);
-        }, 300);
-    } else {
-        // Update UI for regular moves with animation
-        fromPiece.style.transition = 'all 0.3s ease-out';
-        toPiece.style.transition = 'all 0.3s ease-out';
-        
-        fromPiece.style.opacity = '0';
-        toPiece.style.opacity = '0';
-        fromPiece.style.transform = 'translate(-50%, -50%) scale(0.8)';
-        toPiece.style.transform = 'translate(-50%, -50%) scale(1.2)';
-        
-        setTimeout(() => {
-            toPiece.textContent = fromPiece.textContent;
-            fromPiece.textContent = '';
-            
-            fromPiece.style.opacity = '1';
-            toPiece.style.opacity = '1';
-            fromPiece.style.transform = 'translate(-50%, -50%) scale(1)';
-            toPiece.style.transform = 'translate(-50%, -50%) scale(1)';
-            
-            setTimeout(() => {
-                fromPiece.style.transition = '';
-                toPiece.style.transition = '';
-                fromPiece.style.transform = 'translate(-50%, -50%)';
-                toPiece.style.transform = 'translate(-50%, -50%)';
-            }, 300);
-        }, 300);
-    }
+            let castlingState = null;
+            if (isCastling) {
+                // Quick frontend validation for castling
+                const isQueenside = toCol < fromCol;
+                const rookCol = isQueenside ? 0 : 7;
+                const rookSquare = document.querySelector(`.square[data-row="${fromRow}"][data-col="${rookCol}"]`);
+                const rookPiece = rookSquare.querySelector('.piece');
+                const expectedRook = playerColor === 'white' ? '♖' : '♜';
+                
+                if (rookPiece.textContent !== expectedRook || !isPathClear(fromRow, fromCol, toCol)) {
+                    showMoveStatus('Invalid castling move! Path must be clear.', false);
+                    return;
+                }
+
+                const newRookCol = toCol + (isQueenside ? 1 : -1);
+                const newRookSquare = document.querySelector(`.square[data-row="${fromRow}"][data-col="${newRookCol}"]`);
+                
+                // Store castling state for potential reversal
+                castlingState = {
+                    rookSquare,
+                    rookPiece,
+                    newRookSquare,
+                    originalKingContent: fromPiece.textContent,
+                    originalKingSquareContent: '',
+                    originalRookContent: rookPiece.textContent,
+                    originalNewRookSquareContent: newRookSquare.querySelector('.piece').textContent
+                };
+
+                // Update UI for king with animation
+                fromPiece.style.transition = 'all 0.3s ease-out';
+                toPiece.style.transition = 'all 0.3s ease-out';
+                
+                fromPiece.style.opacity = '0';
+                toPiece.style.opacity = '0';
+                fromPiece.style.transform = 'translate(-50%, -50%) scale(0.8)';
+                toPiece.style.transform = 'translate(-50%, -50%) scale(1.2)';
+                
+                setTimeout(() => {
+                    toPiece.textContent = fromPiece.textContent;
+                    fromPiece.textContent = '';
+                    
+                    fromPiece.style.opacity = '1';
+                    toPiece.style.opacity = '1';
+                    fromPiece.style.transform = 'translate(-50%, -50%) scale(1)';
+                    toPiece.style.transform = 'translate(-50%, -50%) scale(1)';
+                    
+                    setTimeout(() => {
+                        fromPiece.style.transition = '';
+                        toPiece.style.transition = '';
+                        fromPiece.style.transform = 'translate(-50%, -50%)';
+                        toPiece.style.transform = 'translate(-50%, -50%)';
+                    }, 300);
+                }, 300);
+
+                // Update UI for rook with animation
+                rookPiece.style.transition = 'all 0.3s ease-out';
+                newRookSquare.querySelector('.piece').style.transition = 'all 0.3s ease-out';
+                
+                rookPiece.style.opacity = '0';
+                newRookSquare.querySelector('.piece').style.opacity = '0';
+                rookPiece.style.transform = 'translate(-50%, -50%) scale(0.8)';
+                newRookSquare.querySelector('.piece').style.transform = 'translate(-50%, -50%) scale(1.2)';
+                
+                setTimeout(() => {
+                    newRookSquare.querySelector('.piece').textContent = rookPiece.textContent;
+                    rookPiece.textContent = '';
+                    
+                    rookPiece.style.opacity = '1';
+                    newRookSquare.querySelector('.piece').style.opacity = '1';
+                    rookPiece.style.transform = 'translate(-50%, -50%) scale(1)';
+                    newRookSquare.querySelector('.piece').style.transform = 'translate(-50%, -50%) scale(1)';
+                    
+                    setTimeout(() => {
+                        rookPiece.style.transition = '';
+                        newRookSquare.querySelector('.piece').style.transition = '';
+                        rookPiece.style.transform = 'translate(-50%, -50%)';
+                        newRookSquare.querySelector('.piece').style.transform = 'translate(-50%, -50%)';
+                    }, 300);
+                }, 300);
+            } else {
+                // Update UI for regular moves with animation
+                fromPiece.style.transition = 'all 0.3s ease-out';
+                toPiece.style.transition = 'all 0.3s ease-out';
+                
+                fromPiece.style.opacity = '0';
+                toPiece.style.opacity = '0';
+                fromPiece.style.transform = 'translate(-50%, -50%) scale(0.8)';
+                toPiece.style.transform = 'translate(-50%, -50%) scale(1.2)';
+                
+                setTimeout(() => {
+                    toPiece.textContent = fromPiece.textContent;
+                    fromPiece.textContent = '';
+                    
+                    fromPiece.style.opacity = '1';
+                    toPiece.style.opacity = '1';
+                    fromPiece.style.transform = 'translate(-50%, -50%) scale(1)';
+                    toPiece.style.transform = 'translate(-50%, -50%) scale(1)';
+                    
+                    setTimeout(() => {
+                        fromPiece.style.transition = '';
+                        toPiece.style.transition = '';
+                        fromPiece.style.transform = 'translate(-50%, -50%)';
+                        toPiece.style.transform = 'translate(-50%, -50%)';
+                    }, 300);
+                }, 300);
+            }
 
             // Show AI thinking indicator with delay
             const thinkingTimeout = setTimeout(() => {
