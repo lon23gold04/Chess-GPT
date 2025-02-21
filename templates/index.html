@@ -59,8 +59,9 @@
             justify-content: center;
             align-items: center;
             position: relative;
-            width: 100%;
-            height: 100%;
+            aspect-ratio: 1;
+            min-height: 0;  /* Prevent content from expanding grid cell */
+            min-width: 0;   /* Prevent content from expanding grid cell */
         }
         .white {
             background-color: #f0d9b5;
@@ -84,12 +85,20 @@
         .piece {
             cursor: grab;
             user-select: none;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: min(6vw, 40px);
             width: 100%;
             height: 100%;
             display: flex;
             justify-content: center;
             align-items: center;
-            font-size: min(6vw, 40px);
+            pointer-events: none;  /* Allow clicks to pass through to the square */
+        }
+        .piece[draggable="true"] {
+            pointer-events: auto;  /* Re-enable pointer events for draggable pieces */
         }
         .piece.dragging {
             cursor: grabbing;
@@ -127,28 +136,46 @@
             border-radius: 4px;
             background-color: #e9ecef;
             margin-bottom: 1rem;
-            min-height: 24px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            height: 40px;
+            width: 200px;
+            position: relative;
+            overflow: hidden;  /* Prevent content overflow */
+        }
+        #turn-indicator, #ai-thinking {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            width: 100%;
+            text-align: center;
+            transition: opacity 0.2s ease;
         }
         #turn-indicator {
             color: #495057;
             font-weight: bold;
+            opacity: 1;
         }
         #ai-thinking {
-            display: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            opacity: 0;
+            pointer-events: none;
         }
-        #ai-thinking .piece {
+        #ai-thinking.visible {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        #ai-thinking .spinner {
             font-size: 24px;
-            display: inline-block;
             animation: spin 2s infinite linear;
-            margin-right: 8px;
+            line-height: 1;
+            display: inline-block;
         }
         #ai-thinking .text {
             color: #495057;
             font-weight: bold;
-            display: inline-block;
         }
         @keyframes spin {
             0% { transform: rotate(0deg); }
@@ -331,8 +358,8 @@
             <div id="turn-container">
                 <div id="turn-indicator">White to move</div>
                 <div id="ai-thinking">
-                    <div class="piece">♟</div>
-                    <div class="text">AI is thinking...</div>
+                    <span class="spinner">♟</span>
+                    <span class="text">AI is thinking...</span>
                 </div>
             </div>
             <p>{{ message }}</p>
@@ -443,8 +470,7 @@
 
             // Show AI thinking indicator after a short delay
             const thinkingTimeout = setTimeout(() => {
-                document.getElementById('turn-indicator').style.display = 'none';
-                document.getElementById('ai-thinking').style.display = 'flex';
+                showAIThinking();
             }, 500);
 
             // Send move to server
@@ -464,8 +490,7 @@
             .then(data => {
                 // Hide AI thinking indicator
                 clearTimeout(thinkingTimeout);
-                document.getElementById('ai-thinking').style.display = 'none';
-                document.getElementById('turn-indicator').style.display = 'block';
+                hideAIThinking();
 
                 if (data.valid) {
                     handleValidMove(data);
@@ -484,8 +509,7 @@
             .catch(error => {
                 // Hide AI thinking indicator
                 clearTimeout(thinkingTimeout);
-                document.getElementById('ai-thinking').style.display = 'none';
-                document.getElementById('turn-indicator').style.display = 'block';
+                hideAIThinking();
 
                 // Revert the move on error
                 fromPiece.textContent = originalFromContent;
@@ -721,6 +745,24 @@
 
             makeMove(fromRow, fromCol, toRow, toCol, selectedPiece, targetSquare.querySelector('.piece'));
             clearSelection();
+        }
+
+        function showAIThinking() {
+            document.getElementById('turn-indicator').style.opacity = '0';
+            const aiThinking = document.getElementById('ai-thinking');
+            aiThinking.style.display = 'flex';
+            // Force a reflow
+            void aiThinking.offsetWidth;
+            aiThinking.classList.add('visible');
+        }
+
+        function hideAIThinking() {
+            document.getElementById('turn-indicator').style.opacity = '1';
+            const aiThinking = document.getElementById('ai-thinking');
+            aiThinking.classList.remove('visible');
+            setTimeout(() => {
+                aiThinking.style.display = 'none';
+            }, 200);
         }
     </script>
 </body>
