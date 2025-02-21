@@ -1,6 +1,6 @@
 # Chess GPT
 
-[![MIT License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+[![License: CC BY-NC-SA 4.0](https://img.shields.io/badge/License-CC%20BY--NC--SA%204.0-lightgrey.svg)](LICENSE)
 [![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)](https://github.com/EN10/Chess/releases)
 [![Python 3.9+](https://img.shields.io/badge/python-3.9+-blue.svg)](https://www.python.org/downloads/)
 [![Commit](https://img.shields.io/badge/commit-0de07d5-orange.svg)](https://github.com/EN10/Chess/commit/0de07d5)
@@ -211,7 +211,7 @@ We welcome contributions! Here's how you can help:
 
 ## License
 
-This project is open source and available under the MIT License.
+This project is licensed under [Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International License](LICENSE).
 
 ## Acknowledgments
 
