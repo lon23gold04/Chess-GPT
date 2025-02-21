@@ -5,7 +5,7 @@
 [![Python 3.9+](https://img.shields.io/badge/python-3.9+-blue.svg)](https://www.python.org/downloads/)
 [![Commit](https://img.shields.io/badge/commit-0de07d5-orange.svg)](https://github.com/EN10/Chess/commit/0de07d5)
 
-A sophisticated web-based chess application featuring an AI opponent and real-time move analysis. Play against a strong chess engine while receiving strategic insights from Google's Gemini AI.
+A sophisticated web-based chess application featuring an AI opponent and real-time move analysis. Play against a strong chess engine while receiving strategic insights from both Stockfish analysis and Google's Gemini AI.
 
 [🎮 Play Now](https://chess-gpt.vercel.app) | [📖 Documentation](https://github.com/EN10/Chess/wiki)
 
@@ -36,13 +36,16 @@ A sophisticated web-based chess application featuring an AI opponent and real-ti
 - Resign option with confirmation
 
 ### AI Integration
-- **Chess Engine**: Powered by chess-api.com
+- **Chess Engine**: Powered by chess-api.com using Stockfish
   - International Master playing strength
+  - Stockfish 17 NNUE with 32 vCore computing power
   - Depth 12 analysis for strong tactical play
   - Fast move calculation
   - No API key required
 
-- **Move Analysis**: Powered by Google's Gemini AI
+- **Move Analysis**: Powered by Stockfish & Google's Gemini AI
+  - Stockfish engine for deep tactical analysis
+  - Gemini AI for natural language insights
   - Strategic evaluation of every move
   - Tactical opportunity identification
   - Clear natural language explanations
@@ -212,6 +215,6 @@ This project is open source and available under the MIT License.
 
 ## Acknowledgments
 
-- Chess API provided by [chess-api.com](https://chess-api.com)
-- Move analysis powered by [Google Gemini AI](https://makersuite.google.com)
+- Chess Engine provided by [chess-api.com](https://chess-api.com) (powered by Stockfish)
+- Move analysis powered by [Stockfish](https://stockfishchess.org/) and [Google Gemini AI](https://makersuite.google.com)
 - Chess piece Unicode characters for the game board
