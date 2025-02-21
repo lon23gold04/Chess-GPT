@@ -1,0 +1,616 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chess Board</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 0;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+        .header {
+            background-color: #ffffff;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            padding: 1rem;
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+        .content {
+            background-color: #ffffff;
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 1rem;
+        }
+        p {
+            color: #666;
+            margin-bottom: 2rem;
+        }
+        .chess-board {
+            display: grid;
+            grid-template-columns: repeat(8, 60px);
+            grid-template-rows: repeat(8, 60px);
+            border: 2px solid #333;
+            max-width: 480px;
+            margin: 0 auto;
+        }
+        .square {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 40px;
+            position: relative;
+        }
+        .white {
+            background-color: #f0d9b5;
+        }
+        .black {
+            background-color: #b58863;
+        }
+        .coordinate {
+            position: absolute;
+            font-size: 12px;
+            color: #666;
+        }
+        .file {
+            bottom: 2px;
+            right: 2px;
+        }
+        .rank {
+            top: 2px;
+            left: 2px;
+        }
+        .piece {
+            cursor: grab;
+            user-select: none;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .piece.dragging {
+            cursor: grabbing;
+            opacity: 0.8;
+        }
+        .square.valid-move {
+            position: relative;
+        }
+        .square.valid-move::after {
+            content: '';
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            background-color: rgba(0, 255, 0, 0.3);
+            border-radius: 50%;
+        }
+        .square.selected {
+            background-color: rgba(255, 255, 0, 0.3);
+        }
+        #move-status {
+            margin-top: 1rem;
+            padding: 0.5rem;
+            border-radius: 4px;
+            display: none;
+        }
+        .success {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        .error {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+        #turn-indicator {
+            margin-bottom: 1rem;
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            background-color: #e9ecef;
+            color: #495057;
+            font-weight: bold;
+        }
+        .in-check {
+            background-color: #ffc107 !important;
+            color: #000 !important;
+            animation: pulse 1s infinite;
+        }
+        .game-over {
+            background-color: #dc3545 !important;
+            color: white !important;
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.8; }
+            100% { opacity: 1; }
+        }
+        #new-game-btn {
+            margin-top: 1rem;
+            padding: 0.5rem 1rem;
+            background-color: #28a745;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 1rem;
+            display: none;
+        }
+        #new-game-btn:hover {
+            background-color: #218838;
+        }
+        .ai-move-highlight {
+            background-color: rgba(255, 193, 7, 0.3) !important;
+        }
+        #analysis-container {
+            margin-top: 1rem;
+            padding: 1rem;
+            background-color: #f8f9fa;
+            border-radius: 4px;
+            width: 100%;
+            max-width: 480px;
+            display: none;
+        }
+        #player-analysis, #ai-analysis {
+            margin-bottom: 1rem;
+            padding: 0.5rem;
+            border-left: 4px solid;
+        }
+        #player-analysis {
+            border-color: #28a745;
+        }
+        #ai-analysis {
+            border-color: #007bff;
+            margin-top: 1rem;
+        }
+        #analysis-title, #ai-analysis-title {
+            font-weight: bold;
+            color: #495057;
+            margin-bottom: 0.5rem;
+        }
+        #analysis-content, #ai-analysis-content {
+            color: #6c757d;
+            line-height: 1.5;
+            font-style: italic;
+        }
+        #ai-thinking {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: rgba(255, 255, 255, 0.9);
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            display: none;
+            text-align: center;
+            z-index: 1000;
+        }
+        
+        #ai-thinking .piece {
+            font-size: 48px;
+            display: inline-block;
+            animation: spin 2s infinite linear;
+        }
+        
+        #ai-thinking .text {
+            margin-top: 10px;
+            color: #495057;
+            font-weight: bold;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .game-controls {
+            margin-top: 1rem;
+            display: flex;
+            gap: 1rem;
+        }
+        
+        .game-btn {
+            padding: 0.5rem 1rem;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: background-color 0.2s;
+        }
+        
+        #new-game-btn {
+            background-color: #28a745;
+            margin-top: 0;
+        }
+        
+        #new-game-btn:hover {
+            background-color: #218838;
+        }
+        
+        #resign-btn {
+            background-color: #dc3545;
+        }
+        
+        #resign-btn:hover {
+            background-color: #c82333;
+        }
+        
+        #resign-btn:disabled {
+            background-color: #dc354580;
+            cursor: not-allowed;
+        }
+        .status-bar {
+            margin-top: 2rem;
+            padding: 1rem;
+            background-color: #f8f9fa;
+            border-top: 1px solid #dee2e6;
+            border-radius: 0 0 8px 8px;
+            width: 100%;
+            max-width: 480px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .game-controls {
+            margin-top: 0;
+            gap: 1.5rem;
+        }
+        
+        .game-btn {
+            padding: 0.75rem 1.5rem;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>{{ title }}</h1>
+    </div>
+    <div class="container">
+        <div class="content">
+            <div id="turn-indicator">White to move</div>
+            <p>{{ message }}</p>
+            <div class="chess-board" data-player-color="{{ player_color }}">
+                {% for row in range(8) %}
+                    {% for col in range(8) %}
+                        <div class="square {{ 'white' if (row + col) % 2 == 0 else 'black' }}"
+                             data-row="{{ row }}" 
+                             data-col="{{ col }}">
+                            {% if row == 7 %}
+                                <span class="coordinate file">{{ ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'][col] }}</span>
+                            {% endif %}
+                            {% if col == 0 %}
+                                <span class="coordinate rank">{{ 8 - row }}</span>
+                            {% endif %}
+                            <span class="piece" draggable="true">{{ board[row][col] }}</span>
+                        </div>
+                    {% endfor %}
+                {% endfor %}
+            </div>
+            <div id="move-status"></div>
+            <div id="analysis-container">
+                <div id="player-analysis">
+                    <div id="analysis-title">Your Move Analysis:</div>
+                    <div id="analysis-content"></div>
+                </div>
+                <div id="ai-analysis" style="display: none;">
+                    <div id="ai-analysis-title">AI Move Analysis:</div>
+                    <div id="ai-analysis-content"></div>
+                </div>
+            </div>
+            <div class="status-bar">
+                <div class="game-controls">
+                    <button id="new-game-btn" class="game-btn" onclick="startNewGame()">New Game</button>
+                    <button id="resign-btn" class="game-btn" onclick="resignGame()">Resign</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="ai-thinking">
+        <div class="piece">♟</div>
+        <div class="text">AI is thinking...</div>
+    </div>
+    <script>
+        let selectedPiece = null;
+        let selectedSquare = null;
+        let isGameOver = false;
+        const playerColor = document.querySelector('.chess-board').dataset.playerColor;
+
+        function handleDragStart(e) {
+            if (isGameOver) {
+                e.preventDefault();
+                showMoveStatus('Game is over! Start a new game.', false);
+                return;
+            }
+
+            const piece = e.target;
+            if (piece.textContent.trim() === '') {
+                e.preventDefault();
+                return;
+            }
+
+            // Check if it's the right player's turn and the piece belongs to the player
+            const pieceColor = getPieceColor(piece.textContent);
+            const currentTurn = document.getElementById('turn-indicator').textContent.split(' ')[0].toLowerCase();
+            
+            if (pieceColor !== currentTurn || pieceColor !== playerColor) {
+                e.preventDefault();
+                showMoveStatus(`It's ${currentTurn}'s turn to move!`, false);
+                return;
+            }
+
+            e.target.classList.add('dragging');
+            selectedPiece = e.target;
+            selectedSquare = e.target.parentElement;
+            selectedSquare.classList.add('selected');
+        }
+
+        function getPieceColor(piece) {
+            const whitePieces = '♔♕♖♗♘♙';
+            const blackPieces = '♚♛♜♝♞♟';
+            if (whitePieces.includes(piece)) return 'white';
+            if (blackPieces.includes(piece)) return 'black';
+            return null;
+        }
+
+        function handleDragEnd(e) {
+            e.target.classList.remove('dragging');
+            if (selectedSquare) {
+                selectedSquare.classList.remove('selected');
+            }
+        }
+
+        function handleDragOver(e) {
+            e.preventDefault();
+        }
+
+        function showAIMove(move) {
+            if (!move) return;
+            
+            // Clear previous highlights
+            document.querySelectorAll('.ai-move-highlight').forEach(square => {
+                square.classList.remove('ai-move-highlight');
+            });
+            
+            // Highlight AI's move
+            const fromSquare = document.querySelector(
+                `.square[data-row="${move.from_row}"][data-col="${move.from_col}"]`
+            );
+            const toSquare = document.querySelector(
+                `.square[data-row="${move.to_row}"][data-col="${move.to_col}"]`
+            );
+            
+            if (fromSquare && toSquare) {
+                fromSquare.classList.add('ai-move-highlight');
+                toSquare.classList.add('ai-move-highlight');
+                
+                // Update the pieces on the board immediately
+                const fromPiece = fromSquare.querySelector('.piece');
+                const toPiece = toSquare.querySelector('.piece');
+                const pieceToMove = fromPiece.textContent;
+                
+                // Animate the AI move
+                fromPiece.style.transition = 'opacity 0.3s';
+                toPiece.style.transition = 'opacity 0.3s';
+                
+                // Fade out the pieces
+                fromPiece.style.opacity = '0';
+                toPiece.style.opacity = '0';
+                
+                setTimeout(() => {
+                    // Update pieces
+                    fromPiece.textContent = '';
+                    toPiece.textContent = pieceToMove;
+                    
+                    // Fade in the moved piece
+                    toPiece.style.opacity = '1';
+                    fromPiece.style.opacity = '1';
+                    
+                    // Remove transitions
+                    setTimeout(() => {
+                        fromPiece.style.transition = '';
+                        toPiece.style.transition = '';
+                    }, 300);
+                }, 300);
+                
+                // Remove highlight after a delay
+                setTimeout(() => {
+                    fromSquare.classList.remove('ai-move-highlight');
+                    toSquare.classList.remove('ai-move-highlight');
+                }, 2000);
+            }
+        }
+
+        function showMoveAnalysis(playerAnalysis, aiAnalysis) {
+            const container = document.getElementById('analysis-container');
+            const playerContent = document.getElementById('analysis-content');
+            const aiContainer = document.getElementById('ai-analysis');
+            const aiContent = document.getElementById('ai-analysis-content');
+            
+            // Show player's move analysis
+            playerContent.textContent = playerAnalysis;
+            
+            // Show AI's move analysis if available
+            if (aiAnalysis) {
+                aiContainer.style.display = 'block';
+                aiContent.textContent = aiAnalysis;
+            } else {
+                aiContainer.style.display = 'none';
+            }
+            
+            container.style.display = 'block';
+        }
+
+        function handleDrop(e) {
+            e.preventDefault();
+            const targetSquare = e.target.closest('.square');
+            if (!targetSquare || !selectedPiece) return;
+
+            const fromRow = parseInt(selectedSquare.dataset.row);
+            const fromCol = parseInt(selectedSquare.dataset.col);
+            const toRow = parseInt(targetSquare.dataset.row);
+            const toCol = parseInt(targetSquare.dataset.col);
+
+            // Store the original piece content in case we need to revert
+            const originalFromContent = selectedPiece.textContent;
+            const originalToContent = targetSquare.querySelector('.piece').textContent;
+
+            // Update the UI immediately
+            const targetPiece = targetSquare.querySelector('.piece');
+            targetPiece.textContent = selectedPiece.textContent;
+            selectedPiece.textContent = '';
+
+            // Show AI thinking indicator after a short delay
+            const thinkingTimeout = setTimeout(() => {
+                document.getElementById('ai-thinking').style.display = 'block';
+            }, 500);
+
+            // Send move to server
+            fetch('/move', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    from_row: fromRow,
+                    from_col: fromCol,
+                    to_row: toRow,
+                    to_col: toCol
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                // Hide AI thinking indicator
+                clearTimeout(thinkingTimeout);
+                document.getElementById('ai-thinking').style.display = 'none';
+
+                if (data.valid) {
+                    const turnIndicator = document.getElementById('turn-indicator');
+                    
+                    // Show move analysis if available
+                    if (data.move_analysis) {
+                        showMoveAnalysis(data.move_analysis, data.ai_move_analysis);
+                    }
+                    
+                    if (data.game_over) {
+                        // Handle game over
+                        isGameOver = true;
+                        turnIndicator.textContent = `${data.winner} wins!`;
+                        turnIndicator.classList.add('game-over');
+                        turnIndicator.classList.remove('in-check');
+                        showMoveStatus(data.message, true);
+                        document.getElementById('resign-btn').disabled = true;
+                    } else {
+                        // Show AI's move if it exists
+                        if (data.ai_move) {
+                            showAIMove(data.ai_move);
+                            // Update turn indicator after AI move
+                            turnIndicator.textContent = 
+                                `${data.current_turn.charAt(0).toUpperCase() + data.current_turn.slice(1)} to move`;
+                            
+                            if (data.in_check) {
+                                turnIndicator.classList.add('in-check');
+                                showMoveStatus(data.message, true);
+                            } else {
+                                turnIndicator.classList.remove('in-check');
+                            }
+                        }
+                    }
+                } else {
+                    // Revert the move if it was invalid
+                    selectedPiece.textContent = originalFromContent;
+                    targetPiece.textContent = originalToContent;
+                    
+                    if (data.game_over) {
+                        showMoveStatus(data.message, false);
+                    } else {
+                        showMoveStatus(data.message || 'Invalid move!', false);
+                    }
+                }
+            })
+            .catch(error => {
+                // Hide AI thinking indicator
+                clearTimeout(thinkingTimeout);
+                document.getElementById('ai-thinking').style.display = 'none';
+
+                // Revert the move on error
+                selectedPiece.textContent = originalFromContent;
+                targetPiece.textContent = originalToContent;
+                
+                console.error('Error:', error);
+                showMoveStatus('Error making move!', false);
+            });
+        }
+
+        function showMoveStatus(message, success) {
+            const statusDiv = document.getElementById('move-status');
+            statusDiv.textContent = message;
+            statusDiv.className = success ? 'success' : 'error';
+            statusDiv.style.display = 'block';
+            setTimeout(() => {
+                statusDiv.style.display = 'none';
+            }, 2000);
+        }
+
+        function startNewGame() {
+            if (!isGameOver && !confirm('Are you sure you want to start a new game?')) {
+                return;
+            }
+            location.reload();
+        }
+
+        function resignGame() {
+            if (isGameOver) return;
+            
+            if (confirm('Are you sure you want to resign?')) {
+                isGameOver = true;
+                const turnIndicator = document.getElementById('turn-indicator');
+                const winner = playerColor === 'white' ? 'Black' : 'White';
+                turnIndicator.textContent = `${winner} wins by resignation!`;
+                turnIndicator.classList.add('game-over');
+                turnIndicator.classList.remove('in-check');
+                showMoveStatus(`Game Over! ${winner} wins by resignation!`, true);
+                document.getElementById('resign-btn').disabled = true;
+                
+                // Start a new game after 2 seconds
+                setTimeout(() => {
+                    location.reload();
+                }, 2000);
+            }
+        }
+
+        // Initialize the resign button state
+        document.getElementById('resign-btn').disabled = isGameOver;
+
+        // Add event listeners
+        document.querySelectorAll('.piece').forEach(piece => {
+            piece.addEventListener('dragstart', handleDragStart);
+            piece.addEventListener('dragend', handleDragEnd);
+        });
+
+        document.querySelectorAll('.square').forEach(square => {
+            square.addEventListener('dragover', handleDragOver);
+            square.addEventListener('drop', handleDrop);
+        });
+    </script>
+</body>
+</html> 
