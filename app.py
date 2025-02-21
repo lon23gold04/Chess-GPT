@@ -308,6 +308,16 @@ def analyze_move(board, from_row, from_col, to_row, to_col, is_capture, is_check
     piece_type = get_piece_type(piece)
     piece_color = get_piece_color(piece)
     
+    # Create a board representation
+    board_str = "\nCurrent board position:\n"
+    for row in range(8):
+        board_str += f"{8-row} "
+        for col in range(8):
+            piece = board[row][col]
+            board_str += f"{piece if piece != ' ' else '.'} "
+        board_str += "\n"
+    board_str += "  a b c d e f g h\n"
+    
     # Create a description of the move
     move_desc = f"Move analysis request: {piece_color} {piece_type} from {from_square} to {to_square}"
     if is_capture:
@@ -320,6 +330,8 @@ def analyze_move(board, from_row, from_col, to_row, to_col, is_capture, is_check
     prompt = f"""
     As a chess expert, analyze this move:
     {move_desc}
+    
+    {board_str}
     
     Consider:
     1. Strategic value
