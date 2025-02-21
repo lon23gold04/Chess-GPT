@@ -105,6 +105,7 @@
             justify-content: center;
             align-items: center;
             pointer-events: none;  /* Allow clicks through to square */
+            transition: all 0.3s ease-out;  /* Smooth transitions for all property changes */
         }
         .piece[draggable="true"] {
             pointer-events: auto;  /* Enable dragging */
@@ -476,14 +477,147 @@
          * @param {Element} fromPiece - Piece being moved
          * @param {Element} toPiece - Piece at target square (if any)
          */
-        function makeMove(fromRow, fromCol, toRow, toCol, fromPiece, toPiece) {
-            // Store original board state for move reversal if needed
-            const originalFromContent = fromPiece.textContent;
-            const originalToContent = toPiece.textContent;
+function isCastlingAttempt(fromPiece, fromCol, toCol) {
+    return get_piece_type(fromPiece.textContent) === 'king' && Math.abs(toCol - fromCol) === 2;
+}
 
-            // Update UI immediately for responsiveness
+function isPathClear(row, fromCol, toCol) {
+    const step = fromCol < toCol ? 1 : -1;
+    for (let col = fromCol + step; col !== toCol; col += step) {
+        const square = document.querySelector(`.square[data-row="${row}"][data-col="${col}"]`);
+        if (square.querySelector('.piece').textContent.trim() !== '') {
+            return false;
+        }
+    }
+    return true;
+}
+
+function get_piece_type(piece) {
+    const pieceTypes = {
+        '♔': 'king', '♚': 'king',
+        '♕': 'queen', '♛': 'queen',
+        '♖': 'rook', '♜': 'rook',
+        '♗': 'bishop', '♝': 'bishop',
+        '♘': 'knight', '♞': 'knight',
+        '♙': 'pawn', '♟': 'pawn'
+    };
+    return pieceTypes[piece] || null;
+}
+
+function makeMove(fromRow, fromCol, toRow, toCol, fromPiece, toPiece) {
+    // Store original board state for move reversal if needed
+    const originalFromContent = fromPiece.textContent;
+    const originalToContent = toPiece.textContent;
+
+    // Check if this is a castling attempt
+    const isCastling = isCastlingAttempt(fromPiece, fromCol, toCol);
+    
+    let castlingState = null;
+    if (isCastling) {
+        // Quick frontend validation for castling
+        const isQueenside = toCol < fromCol;
+        const rookCol = isQueenside ? 0 : 7;
+        const rookSquare = document.querySelector(`.square[data-row="${fromRow}"][data-col="${rookCol}"]`);
+        const rookPiece = rookSquare.querySelector('.piece');
+        const expectedRook = playerColor === 'white' ? '♖' : '♜';
+        
+        if (rookPiece.textContent !== expectedRook || !isPathClear(fromRow, fromCol, toCol)) {
+            showMoveStatus('Invalid castling move! Path must be clear.', false);
+            return;
+        }
+
+        const newRookCol = toCol + (isQueenside ? 1 : -1);
+        const newRookSquare = document.querySelector(`.square[data-row="${fromRow}"][data-col="${newRookCol}"]`);
+        
+        // Store castling state for potential reversal
+        castlingState = {
+            rookSquare,
+            rookPiece,
+            newRookSquare,
+            originalKingContent: fromPiece.textContent,
+            originalKingSquareContent: '',
+            originalRookContent: rookPiece.textContent,
+            originalNewRookSquareContent: newRookSquare.querySelector('.piece').textContent
+        };
+
+        // Update UI for king with animation
+        fromPiece.style.transition = 'all 0.3s ease-out';
+        toPiece.style.transition = 'all 0.3s ease-out';
+        
+        fromPiece.style.opacity = '0';
+        toPiece.style.opacity = '0';
+        fromPiece.style.transform = 'translate(-50%, -50%) scale(0.8)';
+        toPiece.style.transform = 'translate(-50%, -50%) scale(1.2)';
+        
+        setTimeout(() => {
             toPiece.textContent = fromPiece.textContent;
             fromPiece.textContent = '';
+            
+            fromPiece.style.opacity = '1';
+            toPiece.style.opacity = '1';
+            fromPiece.style.transform = 'translate(-50%, -50%) scale(1)';
+            toPiece.style.transform = 'translate(-50%, -50%) scale(1)';
+            
+            setTimeout(() => {
+                fromPiece.style.transition = '';
+                toPiece.style.transition = '';
+                fromPiece.style.transform = 'translate(-50%, -50%)';
+                toPiece.style.transform = 'translate(-50%, -50%)';
+            }, 300);
+        }, 300);
+
+        // Update UI for rook with animation
+        rookPiece.style.transition = 'all 0.3s ease-out';
+        newRookSquare.querySelector('.piece').style.transition = 'all 0.3s ease-out';
+        
+        rookPiece.style.opacity = '0';
+        newRookSquare.querySelector('.piece').style.opacity = '0';
+        rookPiece.style.transform = 'translate(-50%, -50%) scale(0.8)';
+        newRookSquare.querySelector('.piece').style.transform = 'translate(-50%, -50%) scale(1.2)';
+        
+        setTimeout(() => {
+            newRookSquare.querySelector('.piece').textContent = rookPiece.textContent;
+            rookPiece.textContent = '';
+            
+            rookPiece.style.opacity = '1';
+            newRookSquare.querySelector('.piece').style.opacity = '1';
+            rookPiece.style.transform = 'translate(-50%, -50%) scale(1)';
+            newRookSquare.querySelector('.piece').style.transform = 'translate(-50%, -50%) scale(1)';
+            
+            setTimeout(() => {
+                rookPiece.style.transition = '';
+                newRookSquare.querySelector('.piece').style.transition = '';
+                rookPiece.style.transform = 'translate(-50%, -50%)';
+                newRookSquare.querySelector('.piece').style.transform = 'translate(-50%, -50%)';
+            }, 300);
+        }, 300);
+    } else {
+        // Update UI for regular moves with animation
+        fromPiece.style.transition = 'all 0.3s ease-out';
+        toPiece.style.transition = 'all 0.3s ease-out';
+        
+        fromPiece.style.opacity = '0';
+        toPiece.style.opacity = '0';
+        fromPiece.style.transform = 'translate(-50%, -50%) scale(0.8)';
+        toPiece.style.transform = 'translate(-50%, -50%) scale(1.2)';
+        
+        setTimeout(() => {
+            toPiece.textContent = fromPiece.textContent;
+            fromPiece.textContent = '';
+            
+            fromPiece.style.opacity = '1';
+            toPiece.style.opacity = '1';
+            fromPiece.style.transform = 'translate(-50%, -50%) scale(1)';
+            toPiece.style.transform = 'translate(-50%, -50%) scale(1)';
+            
+            setTimeout(() => {
+                fromPiece.style.transition = '';
+                toPiece.style.transition = '';
+                fromPiece.style.transform = 'translate(-50%, -50%)';
+                toPiece.style.transform = 'translate(-50%, -50%)';
+            }, 300);
+        }, 300);
+    }
 
             // Show AI thinking indicator with delay
             const thinkingTimeout = setTimeout(() => {
@@ -512,15 +646,37 @@
                 if (data.valid) {
                     handleValidMove(data);
                 } else {
-                    // Revert invalid moves
-                    fromPiece.textContent = originalFromContent;
-                    toPiece.textContent = originalToContent;
-                    
-                    if (data.game_over) {
-                        showMoveStatus(data.message, false);
+                    // Revert move UI if invalid
+                    if (isCastling && castlingState) {
+                        // Revert king
+                        fromPiece.textContent = castlingState.originalKingContent;
+                        toPiece.textContent = castlingState.originalKingSquareContent;
+                        
+                        // Revert rook with animation
+                        castlingState.rookPiece.style.transition = 'opacity 0.3s';
+                        castlingState.newRookSquare.querySelector('.piece').style.transition = 'opacity 0.3s';
+                        
+                        castlingState.rookPiece.style.opacity = '0';
+                        castlingState.newRookSquare.querySelector('.piece').style.opacity = '0';
+                        
+                        setTimeout(() => {
+                            castlingState.rookPiece.textContent = castlingState.originalRookContent;
+                            castlingState.newRookSquare.querySelector('.piece').textContent = castlingState.originalNewRookSquareContent;
+                            
+                            castlingState.rookPiece.style.opacity = '1';
+                            castlingState.newRookSquare.querySelector('.piece').style.opacity = '1';
+                            
+                            setTimeout(() => {
+                                castlingState.rookPiece.style.transition = '';
+                                castlingState.newRookSquare.querySelector('.piece').style.transition = '';
+                            }, 300);
+                        }, 300);
                     } else {
-                        showMoveStatus(data.message || 'Invalid move!', false);
+                        // Revert regular move
+                        fromPiece.textContent = originalFromContent;
+                        toPiece.textContent = originalToContent;
                     }
+                    showMoveStatus(data.message, false);
                 }
             })
             .catch(error => {
@@ -532,6 +688,13 @@
                 console.error('Error:', error);
                 showMoveStatus('Error making move!', false);
             });
+
+            console.log(`Attempting to move from (${fromRow}, ${fromCol}) to (${toRow}, ${toCol})`);
+
+            // Check if the move is a castling move
+            if (fromPiece.textContent === '♔' && Math.abs(toCol - fromCol) === 2) {
+                console.log('Castling move detected.');
+            }
         }
 
         /**
@@ -539,12 +702,62 @@
          * Updates game state, UI, and displays analysis
          * @param {Object} data - Server response data
          */
+        function animateRookMove(castlingInfo) {
+            const rookFromSquare = document.querySelector(
+                `.square[data-row="${castlingInfo.row}"][data-col="${castlingInfo.rook_from_col}"]`
+            );
+            const rookToSquare = document.querySelector(
+                `.square[data-row="${castlingInfo.row}"][data-col="${castlingInfo.rook_to_col}"]`
+            );
+
+            if (rookFromSquare && rookToSquare) {
+                const rookPiece = rookFromSquare.querySelector('.piece');
+                const targetSpot = rookToSquare.querySelector('.piece');
+                
+                // Set up animation
+                rookPiece.style.transition = 'all 0.3s ease-out';
+                targetSpot.style.transition = 'all 0.3s ease-out';
+                
+                // Fade out and scale
+                rookPiece.style.opacity = '0';
+                targetSpot.style.opacity = '0';
+                rookPiece.style.transform = 'translate(-50%, -50%) scale(0.8)';
+                targetSpot.style.transform = 'translate(-50%, -50%) scale(1.2)';
+                
+                // Move the rook piece
+                setTimeout(() => {
+                    targetSpot.textContent = rookPiece.textContent;
+                    rookPiece.textContent = '';
+                    
+                    // Fade in and normalize scale
+                    rookPiece.style.opacity = '1';
+                    targetSpot.style.opacity = '1';
+                    rookPiece.style.transform = 'translate(-50%, -50%) scale(1)';
+                    targetSpot.style.transform = 'translate(-50%, -50%) scale(1)';
+                    
+                    // Clean up transitions
+                    setTimeout(() => {
+                        rookPiece.style.transition = '';
+                        targetSpot.style.transition = '';
+                        rookPiece.style.transform = 'translate(-50%, -50%)';
+                        targetSpot.style.transform = 'translate(-50%, -50%)';
+                    }, 300);
+                }, 300);
+            }
+        }
+
         function handleValidMove(data) {
             const turnIndicator = document.getElementById('turn-indicator');
             
+            // Log the move details
             // Display move analysis if available
             if (data.move_analysis) {
                 showMoveAnalysis(data.move_analysis, data.ai_move_analysis);
+            }
+
+            // Handle castling if applicable
+            if (data.castling_info) {
+                setTimeout(() => animateRookMove(data.castling_info), 300);
             }
             
             if (data.game_over) {
@@ -559,6 +772,10 @@
                 // Handle AI's move if present
                 if (data.ai_move) {
                     showAIMove(data.ai_move);
+                    // Handle AI castling if applicable
+                    if (data.ai_move && data.ai_move.castling_info) {
+                        setTimeout(() => animateRookMove(data.ai_move.castling_info), 600);
+                    }
                     turnIndicator.textContent = 
                         `${data.current_turn.charAt(0).toUpperCase() + data.current_turn.slice(1)} to move`;
                     
@@ -692,26 +909,32 @@
                 const pieceToMove = fromPiece.textContent;
                 
                 // Set up animation
-                fromPiece.style.transition = 'opacity 0.3s';
-                toPiece.style.transition = 'opacity 0.3s';
+                fromPiece.style.transition = 'all 0.3s ease-out';
+                toPiece.style.transition = 'all 0.3s ease-out';
                 
-                // Fade out
+                // Fade out and scale
                 fromPiece.style.opacity = '0';
                 toPiece.style.opacity = '0';
+                fromPiece.style.transform = 'translate(-50%, -50%) scale(0.8)';
+                toPiece.style.transform = 'translate(-50%, -50%) scale(1.2)';
                 
                 // Update pieces after fade
                 setTimeout(() => {
                     fromPiece.textContent = '';
                     toPiece.textContent = pieceToMove;
                     
-                    // Fade in
-                    toPiece.style.opacity = '1';
+                    // Fade in and normalize scale
                     fromPiece.style.opacity = '1';
+                    toPiece.style.opacity = '1';
+                    fromPiece.style.transform = 'translate(-50%, -50%) scale(1)';
+                    toPiece.style.transform = 'translate(-50%, -50%) scale(1)';
                     
                     // Clean up transitions
                     setTimeout(() => {
                         fromPiece.style.transition = '';
                         toPiece.style.transition = '';
+                        fromPiece.style.transform = 'translate(-50%, -50%)';
+                        toPiece.style.transform = 'translate(-50%, -50%)';
                     }, 300);
                 }, 300);
                 
@@ -839,4 +1062,4 @@
         }
     </script>
 </body>
-</html> 
+</html>
