@@ -15,7 +15,8 @@
         .container {
             max-width: 800px;
             margin: 0 auto;
-            padding: 2rem;
+            padding: 1rem;
+            box-sizing: border-box;
         }
         .header {
             background-color: #ffffff;
@@ -26,12 +27,14 @@
         }
         .content {
             background-color: #ffffff;
-            padding: 2rem;
+            padding: 1rem;
             border-radius: 8px;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
             display: flex;
             flex-direction: column;
             align-items: center;
+            width: 100%;
+            box-sizing: border-box;
         }
         h1 {
             color: #333;
@@ -43,18 +46,21 @@
         }
         .chess-board {
             display: grid;
-            grid-template-columns: repeat(8, 60px);
-            grid-template-rows: repeat(8, 60px);
+            grid-template-columns: repeat(8, 1fr);
+            grid-template-rows: repeat(8, 1fr);
             border: 2px solid #333;
+            width: 100%;
             max-width: 480px;
             margin: 0 auto;
+            aspect-ratio: 1;
         }
         .square {
             display: flex;
             justify-content: center;
             align-items: center;
-            font-size: 40px;
             position: relative;
+            width: 100%;
+            height: 100%;
         }
         .white {
             background-color: #f0d9b5;
@@ -78,29 +84,29 @@
         .piece {
             cursor: grab;
             user-select: none;
-            width: 40px;
-            height: 40px;
+            width: 100%;
+            height: 100%;
             display: flex;
             justify-content: center;
             align-items: center;
+            font-size: min(6vw, 40px);
         }
         .piece.dragging {
             cursor: grabbing;
             opacity: 0.8;
         }
-        .square.valid-move {
+        .square.selected {
             position: relative;
         }
-        .square.valid-move::after {
+        .square.selected::after {
             content: '';
             position: absolute;
-            width: 20px;
-            height: 20px;
-            background-color: rgba(0, 255, 0, 0.3);
-            border-radius: 50%;
-        }
-        .square.selected {
-            background-color: rgba(255, 255, 0, 0.3);
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(144, 238, 144, 0.6);  /* Light green with 60% opacity */
+            pointer-events: none;
         }
         #move-status {
             margin-top: 1rem;
@@ -116,103 +122,34 @@
             background-color: #f8d7da;
             color: #721c24;
         }
-        #turn-indicator {
-            margin-bottom: 1rem;
+        #turn-container {
             padding: 0.5rem 1rem;
             border-radius: 4px;
             background-color: #e9ecef;
-            color: #495057;
-            font-weight: bold;
-        }
-        .in-check {
-            background-color: #ffc107 !important;
-            color: #000 !important;
-            animation: pulse 1s infinite;
-        }
-        .game-over {
-            background-color: #dc3545 !important;
-            color: white !important;
-            animation: pulse 2s infinite;
-        }
-        @keyframes pulse {
-            0% { opacity: 1; }
-            50% { opacity: 0.8; }
-            100% { opacity: 1; }
-        }
-        #new-game-btn {
-            margin-top: 1rem;
-            padding: 0.5rem 1rem;
-            background-color: #28a745;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 1rem;
-            display: none;
-        }
-        #new-game-btn:hover {
-            background-color: #218838;
-        }
-        .ai-move-highlight {
-            background-color: rgba(255, 193, 7, 0.3) !important;
-        }
-        #analysis-container {
-            margin-top: 1rem;
-            padding: 1rem;
-            background-color: #f8f9fa;
-            border-radius: 4px;
-            width: 100%;
-            max-width: 480px;
-            display: none;
-        }
-        #player-analysis, #ai-analysis {
             margin-bottom: 1rem;
-            padding: 0.5rem;
-            border-left: 4px solid;
+            min-height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
-        #player-analysis {
-            border-color: #28a745;
-        }
-        #ai-analysis {
-            border-color: #007bff;
-            margin-top: 1rem;
-        }
-        #analysis-title, #ai-analysis-title {
-            font-weight: bold;
+        #turn-indicator {
             color: #495057;
-            margin-bottom: 0.5rem;
-        }
-        #analysis-content, #ai-analysis-content {
-            color: #6c757d;
-            line-height: 1.5;
-            font-style: italic;
+            font-weight: bold;
         }
         #ai-thinking {
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background-color: rgba(255, 255, 255, 0.9);
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
             display: none;
-            text-align: center;
-            z-index: 1000;
         }
-        
         #ai-thinking .piece {
-            font-size: 48px;
+            font-size: 24px;
             display: inline-block;
             animation: spin 2s infinite linear;
+            margin-right: 8px;
         }
-        
         #ai-thinking .text {
-            margin-top: 10px;
             color: #495057;
             font-weight: bold;
+            display: inline-block;
         }
-        
         @keyframes spin {
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
@@ -279,6 +216,110 @@
             letter-spacing: 0.5px;
             font-size: 0.9rem;
         }
+
+        @media screen and (max-width: 600px) {
+            .container {
+                padding: 0.5rem;
+            }
+            .content {
+                padding: 0.5rem;
+            }
+            .header {
+                margin-bottom: 1rem;
+            }
+            h1 {
+                font-size: 1.5rem;
+                margin-bottom: 0.5rem;
+            }
+            p {
+                margin-bottom: 1rem;
+            }
+            .coordinate {
+                font-size: 10px;
+            }
+            #analysis-container {
+                padding: 0.5rem;
+            }
+            .game-btn {
+                padding: 0.5rem 1rem;
+                font-size: 0.8rem;
+            }
+            .status-bar {
+                margin-top: 1rem;
+                padding: 0.5rem;
+            }
+        }
+
+        @media screen and (max-width: 400px) {
+            .piece {
+                font-size: min(8vw, 40px);
+            }
+            .game-controls {
+                gap: 0.5rem;
+            }
+            .game-btn {
+                padding: 0.4rem 0.8rem;
+                font-size: 0.7rem;
+            }
+        }
+
+        @media screen and (orientation: landscape) and (max-height: 600px) {
+            .container {
+                display: flex;
+                flex-direction: row;
+                align-items: flex-start;
+                gap: 1rem;
+            }
+            .chess-board {
+                max-height: 80vh;
+                width: auto;
+            }
+            .content {
+                flex-direction: row;
+                flex-wrap: wrap;
+                justify-content: center;
+                gap: 1rem;
+            }
+            #analysis-container {
+                max-width: 300px;
+            }
+        }
+
+        #analysis-container {
+            margin-top: 1rem;
+            padding: 1rem;
+            background-color: #f8f9fa;
+            border-radius: 4px;
+            width: 100%;
+            max-width: 480px;
+            display: none;
+        }
+        #player-analysis, #ai-analysis {
+            margin-bottom: 1rem;
+            padding: 1rem;
+            border-left: 4px solid;
+            background-color: white;
+            border-radius: 0 4px 4px 0;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        #player-analysis {
+            border-color: #28a745;
+        }
+        #ai-analysis {
+            border-color: #007bff;
+            margin-top: 1rem;
+        }
+        #analysis-title, #ai-analysis-title {
+            font-weight: bold;
+            color: #495057;
+            margin-bottom: 0.5rem;
+            font-size: 1.1rem;
+        }
+        #analysis-content, #ai-analysis-content {
+            color: #6c757d;
+            line-height: 1.5;
+            font-style: italic;
+        }
     </style>
 </head>
 <body>
@@ -287,7 +328,13 @@
     </div>
     <div class="container">
         <div class="content">
-            <div id="turn-indicator">White to move</div>
+            <div id="turn-container">
+                <div id="turn-indicator">White to move</div>
+                <div id="ai-thinking">
+                    <div class="piece">♟</div>
+                    <div class="text">AI is thinking...</div>
+                </div>
+            </div>
             <p>{{ message }}</p>
             <div class="chess-board" data-player-color="{{ player_color }}">
                 {% for row in range(8) %}
@@ -325,43 +372,219 @@
             </div>
         </div>
     </div>
-    <div id="ai-thinking">
-        <div class="piece">♟</div>
-        <div class="text">AI is thinking...</div>
-    </div>
     <script>
         let selectedPiece = null;
         let selectedSquare = null;
         let isGameOver = false;
         const playerColor = document.querySelector('.chess-board').dataset.playerColor;
 
-        function handleDragStart(e) {
+        function clearSelection() {
+            if (selectedSquare) {
+                selectedSquare.classList.remove('selected');
+            }
+            selectedPiece = null;
+            selectedSquare = null;
+        }
+
+        function handleSquareClick(e) {
             if (isGameOver) {
-                e.preventDefault();
                 showMoveStatus('Game is over! Start a new game.', false);
                 return;
             }
 
-            const piece = e.target;
-            if (piece.textContent.trim() === '') {
-                e.preventDefault();
-                return;
-            }
+            const clickedSquare = e.target.closest('.square');
+            const clickedPiece = clickedSquare.querySelector('.piece');
 
-            // Check if it's the right player's turn and the piece belongs to the player
-            const pieceColor = getPieceColor(piece.textContent);
-            const currentTurn = document.getElementById('turn-indicator').textContent.split(' ')[0].toLowerCase();
+            // If no piece is selected, try to select one
+            if (!selectedPiece) {
+                if (clickedPiece.textContent.trim() === '') {
+                    return;
+                }
+
+                const pieceColor = getPieceColor(clickedPiece.textContent);
+                const currentTurn = document.getElementById('turn-indicator').textContent.split(' ')[0].toLowerCase();
+
+                if (pieceColor !== currentTurn || pieceColor !== playerColor) {
+                    showMoveStatus(`It's ${currentTurn}'s turn to move!`, false);
+                    return;
+                }
+
+                // Select the piece
+                selectedPiece = clickedPiece;
+                selectedSquare = clickedSquare;
+                selectedSquare.classList.add('selected');
+            } else {
+                // If a piece is already selected, try to move it
+                if (clickedSquare === selectedSquare) {
+                    // Clicking the same square deselects the piece
+                    clearSelection();
+                    return;
+                }
+
+                // Attempt to make the move
+                const fromRow = parseInt(selectedSquare.dataset.row);
+                const fromCol = parseInt(selectedSquare.dataset.col);
+                const toRow = parseInt(clickedSquare.dataset.row);
+                const toCol = parseInt(clickedSquare.dataset.col);
+
+                makeMove(fromRow, fromCol, toRow, toCol, selectedPiece, clickedSquare.querySelector('.piece'));
+                clearSelection();
+            }
+        }
+
+        function makeMove(fromRow, fromCol, toRow, toCol, fromPiece, toPiece) {
+            // Store original pieces in case we need to revert
+            const originalFromContent = fromPiece.textContent;
+            const originalToContent = toPiece.textContent;
+
+            // Update the UI immediately
+            toPiece.textContent = fromPiece.textContent;
+            fromPiece.textContent = '';
+
+            // Show AI thinking indicator after a short delay
+            const thinkingTimeout = setTimeout(() => {
+                document.getElementById('turn-indicator').style.display = 'none';
+                document.getElementById('ai-thinking').style.display = 'flex';
+            }, 500);
+
+            // Send move to server
+            fetch('/move', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    from_row: fromRow,
+                    from_col: fromCol,
+                    to_row: toRow,
+                    to_col: toCol
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                // Hide AI thinking indicator
+                clearTimeout(thinkingTimeout);
+                document.getElementById('ai-thinking').style.display = 'none';
+                document.getElementById('turn-indicator').style.display = 'block';
+
+                if (data.valid) {
+                    handleValidMove(data);
+                } else {
+                    // Revert the move if it was invalid
+                    fromPiece.textContent = originalFromContent;
+                    toPiece.textContent = originalToContent;
+                    
+                    if (data.game_over) {
+                        showMoveStatus(data.message, false);
+                    } else {
+                        showMoveStatus(data.message || 'Invalid move!', false);
+                    }
+                }
+            })
+            .catch(error => {
+                // Hide AI thinking indicator
+                clearTimeout(thinkingTimeout);
+                document.getElementById('ai-thinking').style.display = 'none';
+                document.getElementById('turn-indicator').style.display = 'block';
+
+                // Revert the move on error
+                fromPiece.textContent = originalFromContent;
+                toPiece.textContent = originalToContent;
+                
+                console.error('Error:', error);
+                showMoveStatus('Error making move!', false);
+            });
+        }
+
+        function handleValidMove(data) {
+            const turnIndicator = document.getElementById('turn-indicator');
             
-            if (pieceColor !== currentTurn || pieceColor !== playerColor) {
-                e.preventDefault();
-                showMoveStatus(`It's ${currentTurn}'s turn to move!`, false);
+            // Show move analysis if available
+            if (data.move_analysis) {
+                showMoveAnalysis(data.move_analysis, data.ai_move_analysis);
+            }
+            
+            if (data.game_over) {
+                // Handle game over
+                isGameOver = true;
+                turnIndicator.textContent = `${data.winner} wins!`;
+                turnIndicator.classList.add('game-over');
+                turnIndicator.classList.remove('in-check');
+                showMoveStatus(data.message, true);
+                document.getElementById('resign-btn').disabled = true;
+            } else {
+                // Show AI's move if it exists
+                if (data.ai_move) {
+                    showAIMove(data.ai_move);
+                    // Update turn indicator after AI move
+                    turnIndicator.textContent = 
+                        `${data.current_turn.charAt(0).toUpperCase() + data.current_turn.slice(1)} to move`;
+                    
+                    if (data.in_check) {
+                        turnIndicator.classList.add('in-check');
+                        showMoveStatus(data.message, true);
+                    } else {
+                        turnIndicator.classList.remove('in-check');
+                    }
+                }
+            }
+        }
+
+        function showMoveAnalysis(playerAnalysis, aiAnalysis) {
+            const container = document.getElementById('analysis-container');
+            const playerContent = document.getElementById('analysis-content');
+            const aiContainer = document.getElementById('ai-analysis');
+            const aiContent = document.getElementById('ai-analysis-content');
+            
+            // Show player's move analysis
+            playerContent.textContent = playerAnalysis;
+            
+            // Show AI's move analysis if available
+            if (aiAnalysis) {
+                aiContainer.style.display = 'block';
+                aiContent.textContent = aiAnalysis;
+            } else {
+                aiContainer.style.display = 'none';
+            }
+            
+            container.style.display = 'block';
+        }
+
+        function showMoveStatus(message, success) {
+            const statusDiv = document.getElementById('move-status');
+            statusDiv.textContent = message;
+            statusDiv.className = success ? 'success' : 'error';
+            statusDiv.style.display = 'block';
+            setTimeout(() => {
+                statusDiv.style.display = 'none';
+            }, 2000);
+        }
+
+        function startNewGame() {
+            if (!isGameOver && !confirm('Are you sure you want to start a new game?')) {
                 return;
             }
+            location.reload();
+        }
 
-            e.target.classList.add('dragging');
-            selectedPiece = e.target;
-            selectedSquare = e.target.parentElement;
-            selectedSquare.classList.add('selected');
+        function resignGame() {
+            if (isGameOver) return;
+            
+            if (confirm('Are you sure you want to resign?')) {
+                isGameOver = true;
+                const turnIndicator = document.getElementById('turn-indicator');
+                const winner = playerColor === 'white' ? 'Black' : 'White';
+                turnIndicator.textContent = `${winner} wins by resignation!`;
+                turnIndicator.classList.add('game-over');
+                turnIndicator.classList.remove('in-check');
+                showMoveStatus(`Game Over! ${winner} wins by resignation!`, true);
+                document.getElementById('resign-btn').disabled = true;
+                
+                // Start a new game after 2 seconds
+                setTimeout(() => {
+                    location.reload();
+                }, 2000);
+            }
         }
 
         function getPieceColor(piece) {
@@ -370,17 +593,6 @@
             if (whitePieces.includes(piece)) return 'white';
             if (blackPieces.includes(piece)) return 'black';
             return null;
-        }
-
-        function handleDragEnd(e) {
-            e.target.classList.remove('dragging');
-            if (selectedSquare) {
-                selectedSquare.classList.remove('selected');
-            }
-        }
-
-        function handleDragOver(e) {
-            e.preventDefault();
         }
 
         function showAIMove(move) {
@@ -440,24 +652,61 @@
             }
         }
 
-        function showMoveAnalysis(playerAnalysis, aiAnalysis) {
-            const container = document.getElementById('analysis-container');
-            const playerContent = document.getElementById('analysis-content');
-            const aiContainer = document.getElementById('ai-analysis');
-            const aiContent = document.getElementById('ai-analysis-content');
-            
-            // Show player's move analysis
-            playerContent.textContent = playerAnalysis;
-            
-            // Show AI's move analysis if available
-            if (aiAnalysis) {
-                aiContainer.style.display = 'block';
-                aiContent.textContent = aiAnalysis;
-            } else {
-                aiContainer.style.display = 'none';
+        // Initialize the resign button state
+        document.getElementById('resign-btn').disabled = isGameOver;
+
+        // Add click event listeners to all squares
+        document.querySelectorAll('.square').forEach(square => {
+            square.addEventListener('click', handleSquareClick);
+            square.addEventListener('dragover', handleDragOver);
+            square.addEventListener('drop', handleDrop);
+        });
+
+        // Keep existing drag-and-drop event listeners
+        document.querySelectorAll('.piece').forEach(piece => {
+            piece.addEventListener('dragstart', handleDragStart);
+            piece.addEventListener('dragend', handleDragEnd);
+        });
+
+        // Add these functions before the event listeners
+        function handleDragStart(e) {
+            if (isGameOver) {
+                e.preventDefault();
+                showMoveStatus('Game is over! Start a new game.', false);
+                return;
             }
+
+            const piece = e.target;
+            if (piece.textContent.trim() === '') {
+                e.preventDefault();
+                return;
+            }
+
+            const pieceColor = getPieceColor(piece.textContent);
+            const currentTurn = document.getElementById('turn-indicator').textContent.split(' ')[0].toLowerCase();
             
-            container.style.display = 'block';
+            if (pieceColor !== currentTurn || pieceColor !== playerColor) {
+                e.preventDefault();
+                showMoveStatus(`It's ${currentTurn}'s turn to move!`, false);
+                return;
+            }
+
+            e.target.classList.add('dragging');
+            selectedPiece = e.target;
+            selectedSquare = e.target.parentElement;
+            selectedSquare.classList.add('selected');
+        }
+
+        function handleDragEnd(e) {
+            e.target.classList.remove('dragging');
+            if (selectedSquare) {
+                selectedSquare.classList.remove('selected');
+            }
+            clearSelection();
+        }
+
+        function handleDragOver(e) {
+            e.preventDefault();
         }
 
         function handleDrop(e) {
@@ -470,147 +719,9 @@
             const toRow = parseInt(targetSquare.dataset.row);
             const toCol = parseInt(targetSquare.dataset.col);
 
-            // Store the original piece content in case we need to revert
-            const originalFromContent = selectedPiece.textContent;
-            const originalToContent = targetSquare.querySelector('.piece').textContent;
-
-            // Update the UI immediately
-            const targetPiece = targetSquare.querySelector('.piece');
-            targetPiece.textContent = selectedPiece.textContent;
-            selectedPiece.textContent = '';
-
-            // Show AI thinking indicator after a short delay
-            const thinkingTimeout = setTimeout(() => {
-                document.getElementById('ai-thinking').style.display = 'block';
-            }, 500);
-
-            // Send move to server
-            fetch('/move', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    from_row: fromRow,
-                    from_col: fromCol,
-                    to_row: toRow,
-                    to_col: toCol
-                })
-            })
-            .then(response => response.json())
-            .then(data => {
-                // Hide AI thinking indicator
-                clearTimeout(thinkingTimeout);
-                document.getElementById('ai-thinking').style.display = 'none';
-
-                if (data.valid) {
-                    const turnIndicator = document.getElementById('turn-indicator');
-                    
-                    // Show move analysis if available
-                    if (data.move_analysis) {
-                        showMoveAnalysis(data.move_analysis, data.ai_move_analysis);
-                    }
-                    
-                    if (data.game_over) {
-                        // Handle game over
-                        isGameOver = true;
-                        turnIndicator.textContent = `${data.winner} wins!`;
-                        turnIndicator.classList.add('game-over');
-                        turnIndicator.classList.remove('in-check');
-                        showMoveStatus(data.message, true);
-                        document.getElementById('resign-btn').disabled = true;
-                    } else {
-                        // Show AI's move if it exists
-                        if (data.ai_move) {
-                            showAIMove(data.ai_move);
-                            // Update turn indicator after AI move
-                            turnIndicator.textContent = 
-                                `${data.current_turn.charAt(0).toUpperCase() + data.current_turn.slice(1)} to move`;
-                            
-                            if (data.in_check) {
-                                turnIndicator.classList.add('in-check');
-                                showMoveStatus(data.message, true);
-                            } else {
-                                turnIndicator.classList.remove('in-check');
-                            }
-                        }
-                    }
-                } else {
-                    // Revert the move if it was invalid
-                    selectedPiece.textContent = originalFromContent;
-                    targetPiece.textContent = originalToContent;
-                    
-                    if (data.game_over) {
-                        showMoveStatus(data.message, false);
-                    } else {
-                        showMoveStatus(data.message || 'Invalid move!', false);
-                    }
-                }
-            })
-            .catch(error => {
-                // Hide AI thinking indicator
-                clearTimeout(thinkingTimeout);
-                document.getElementById('ai-thinking').style.display = 'none';
-
-                // Revert the move on error
-                selectedPiece.textContent = originalFromContent;
-                targetPiece.textContent = originalToContent;
-                
-                console.error('Error:', error);
-                showMoveStatus('Error making move!', false);
-            });
+            makeMove(fromRow, fromCol, toRow, toCol, selectedPiece, targetSquare.querySelector('.piece'));
+            clearSelection();
         }
-
-        function showMoveStatus(message, success) {
-            const statusDiv = document.getElementById('move-status');
-            statusDiv.textContent = message;
-            statusDiv.className = success ? 'success' : 'error';
-            statusDiv.style.display = 'block';
-            setTimeout(() => {
-                statusDiv.style.display = 'none';
-            }, 2000);
-        }
-
-        function startNewGame() {
-            if (!isGameOver && !confirm('Are you sure you want to start a new game?')) {
-                return;
-            }
-            location.reload();
-        }
-
-        function resignGame() {
-            if (isGameOver) return;
-            
-            if (confirm('Are you sure you want to resign?')) {
-                isGameOver = true;
-                const turnIndicator = document.getElementById('turn-indicator');
-                const winner = playerColor === 'white' ? 'Black' : 'White';
-                turnIndicator.textContent = `${winner} wins by resignation!`;
-                turnIndicator.classList.add('game-over');
-                turnIndicator.classList.remove('in-check');
-                showMoveStatus(`Game Over! ${winner} wins by resignation!`, true);
-                document.getElementById('resign-btn').disabled = true;
-                
-                // Start a new game after 2 seconds
-                setTimeout(() => {
-                    location.reload();
-                }, 2000);
-            }
-        }
-
-        // Initialize the resign button state
-        document.getElementById('resign-btn').disabled = isGameOver;
-
-        // Add event listeners
-        document.querySelectorAll('.piece').forEach(piece => {
-            piece.addEventListener('dragstart', handleDragStart);
-            piece.addEventListener('dragend', handleDragEnd);
-        });
-
-        document.querySelectorAll('.square').forEach(square => {
-            square.addEventListener('dragover', handleDragOver);
-            square.addEventListener('drop', handleDrop);
-        });
     </script>
 </body>
 </html> 
