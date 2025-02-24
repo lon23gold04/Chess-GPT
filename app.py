@@ -71,6 +71,9 @@ def move():
             'message': 'Invalid move! Please check piece movement rules.'
         })
     
+    # Save the original piece information before the move
+    original_piece = game.board[from_row][from_col]
+    
     # Execute player's move
     is_capture = game.board[to_row][to_col] != ' '
     game.make_move(from_row, from_col, to_row, to_col)
@@ -82,8 +85,14 @@ def move():
     # Get move analysis
     fen = game.to_fen()
     player_engine_analysis = get_ai_move(fen)
+    
+    # Create a temporary board with the original piece for analysis
+    temp_board = [row[:] for row in game.board]  # Deep copy the current board
+    temp_board[from_row][from_col] = original_piece  # Restore the original piece at the from position
+    temp_board[to_row][to_col] = ' '  # Clear the to position
+    
     player_move_analysis = analyze_move(
-        model, game.board, from_row, from_col, to_row, to_col,
+        model, temp_board, from_row, from_col, to_row, to_col,
         is_capture, is_check, player_engine_analysis
     )
     
@@ -110,15 +119,23 @@ def move():
             # Check if AI's move is a capture
             ai_is_capture = game.board[ai_to_row][ai_to_col] != ' '
             
+            # Save the original AI piece information before the move
+            ai_original_piece = game.board[ai_from_row][ai_from_col]
+            
             # Make AI's move
             game.make_move(ai_from_row, ai_from_col, ai_to_row, ai_to_col)
             
             # Check if player is in check
             ai_is_check = game._is_in_check(game.player_color, game.board)
             
+            # Create a temporary board with the original AI piece for analysis
+            ai_temp_board = [row[:] for row in game.board]  # Deep copy the current board
+            ai_temp_board[ai_from_row][ai_from_col] = ai_original_piece  # Restore the original piece
+            ai_temp_board[ai_to_row][ai_to_col] = ' '  # Clear the destination
+            
             # Get analysis for AI's move
             response['ai_move_analysis'] = analyze_move(
-                model, game.board, ai_from_row, ai_from_col, ai_to_row, ai_to_col,
+                model, ai_temp_board, ai_from_row, ai_from_col, ai_to_row, ai_to_col,
                 ai_is_capture, ai_is_check, ai_analysis
             )
             
