@@ -470,12 +470,18 @@
                 const toRow = parseInt(clickedSquare.dataset.row);
                 const toCol = parseInt(clickedSquare.dataset.col);
 
-                // Check if the destination square is empty
+                // Check if the destination square is empty or contains an opponent's piece
                 const destinationPiece = clickedSquare.querySelector('.piece').textContent.trim();
                 if (destinationPiece !== '') {
-                    showMoveStatus('Invalid move! The destination square is occupied.', false);
-                    clearSelection();
-                    return;
+                    const destinationPieceColor = getPieceColor(destinationPiece);
+                    const selectedPieceColor = getPieceColor(selectedPiece.textContent);
+                    
+                    // If destination has a piece of the same color, invalid move
+                    if (destinationPieceColor === selectedPieceColor) {
+                        showMoveStatus('Invalid move! Cannot capture your own piece.', false);
+                        clearSelection();
+                        return;
+                    }
                 }
 
                 makeMove(fromRow, fromCol, toRow, toCol, selectedPiece, clickedSquare.querySelector('.piece'));
@@ -1068,6 +1074,20 @@
             e.preventDefault();
             const targetSquare = e.target.closest('.square');
             if (!targetSquare || !selectedPiece) return;
+
+            // Check if the destination square contains an opponent's piece
+            const destinationPiece = targetSquare.querySelector('.piece').textContent.trim();
+            if (destinationPiece !== '') {
+                const destinationPieceColor = getPieceColor(destinationPiece);
+                const selectedPieceColor = getPieceColor(selectedPiece.textContent);
+                
+                // If destination has a piece of the same color, invalid move
+                if (destinationPieceColor === selectedPieceColor) {
+                    showMoveStatus('Invalid move! Cannot capture your own piece.', false);
+                    clearSelection();
+                    return;
+                }
+            }
 
             const fromRow = parseInt(selectedSquare.dataset.row);
             const fromCol = parseInt(selectedSquare.dataset.col);
