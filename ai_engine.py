@@ -37,8 +37,21 @@ def analyze_move(model, board, from_row, from_col, to_row, to_col, is_capture, i
     to_square = f"{files[to_col]}{ranks[to_row]}"
     
     piece = board[from_row][from_col]
-    piece_type = get_piece_type(piece)
-    piece_color = get_piece_color(piece)
+    if piece == ' ':  # If piece is empty, this might be a castling move
+        # Check if this is a castling move (e1 to g1 or e1 to c1 for white)
+        if from_square == 'e1' and (to_square == 'g1' or to_square == 'c1'):
+            piece_type = 'king'
+            piece_color = 'white'
+        # Check if this is a castling move (e8 to g8 or e8 to c8 for black)
+        elif from_square == 'e8' and (to_square == 'g8' or to_square == 'c8'):
+            piece_type = 'king'
+            piece_color = 'black'
+        else:
+            piece_type = None
+            piece_color = None
+    else:
+        piece_type = get_piece_type(piece)
+        piece_color = get_piece_color(piece)
     
     board_str = format_board_string(board)
     move_desc = format_move_description(piece_color, piece_type, from_square, to_square, 
@@ -85,11 +98,20 @@ def format_board_string(board):
 def format_move_description(piece_color, piece_type, from_square, to_square, 
                           is_capture, is_check, board, to_row, to_col):
     """Format the move description."""
-    move_desc = f"Move analysis request: {piece_color} {piece_type} from {from_square} to {to_square}"
-    if is_capture:
-        captured_piece = board[to_row][to_col]
-        captured_type = get_piece_type(captured_piece)
-        move_desc += f", capturing {get_piece_color(captured_piece)} {captured_type}"
+    # Check if move is castling (king moving two squares)
+    is_castling = piece_type == 'king' and abs(ord(from_square[0]) - ord(to_square[0])) == 2
+    
+    if is_castling:
+        # O-O for kingside castling, O-O-O for queenside castling
+        castling_type = "O-O" if ord(to_square[0]) > ord(from_square[0]) else "O-O-O"
+        move_desc = f"Move analysis request: {piece_color} {castling_type} (castling)"
+    else:
+        move_desc = f"Move analysis request: {piece_color} {piece_type} from {from_square} to {to_square}"
+        if is_capture:
+            captured_piece = board[to_row][to_col]
+            captured_type = get_piece_type(captured_piece)
+            move_desc += f", capturing {get_piece_color(captured_piece)} {captured_type}"
+    
     if is_check:
         move_desc += ", putting opponent in check"
     return move_desc
