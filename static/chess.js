@@ -144,15 +144,13 @@ const ui = {
  * Animation functions
  */
 const animations = {
-    // Animate piece movement
+    // Animate piece movement (all types)
     animatePiece(fromElement, toElement, onComplete) {
         const elements = [fromElement, toElement];
         elements.forEach(el => {
             el.style.transition = ANIMATION.STYLE;
             el.style.opacity = '0';
-            el.style.transform = el === fromElement ? 
-                'translate(-50%, -50%) scale(0.8)' : 
-                'translate(-50%, -50%) scale(1.2)';
+            el.style.transform = 'translate(-50%, -50%) scale(0.8)';
         });
 
         setTimeout(() => {
@@ -171,58 +169,65 @@ const animations = {
         }, ANIMATION.DURATION);
     },
     
-    // Animate rook for castling
-    animateRook(castlingInfo) {
-        const rookFromSquare = document.querySelector(
-            `.square[data-row="${castlingInfo.row}"][data-col="${castlingInfo.rook_from_col}"]`
-        );
-        const rookToSquare = document.querySelector(
-            `.square[data-row="${castlingInfo.row}"][data-col="${castlingInfo.rook_to_col}"]`
-        );
+    // Animate castling or AI move
+    animateMove(moveInfo, isAI = false) {
+        // For castling rook
+        if (!isAI && moveInfo.rook_from_col !== undefined) {
+            const rookFromSquare = document.querySelector(
+                `.square[data-row="${moveInfo.row}"][data-col="${moveInfo.rook_from_col}"]`
+            );
+            const rookToSquare = document.querySelector(
+                `.square[data-row="${moveInfo.row}"][data-col="${moveInfo.rook_to_col}"]`
+            );
 
-        if (rookFromSquare && rookToSquare) {
-            const rookPiece = rookFromSquare.querySelector('.piece');
-            const targetSpot = rookToSquare.querySelector('.piece');
-            
-            this.animatePiece(rookPiece, targetSpot, () => {
-                targetSpot.textContent = rookPiece.textContent;
-                rookPiece.textContent = '';
-            });
+            if (rookFromSquare && rookToSquare) {
+                const rookPiece = rookFromSquare.querySelector('.piece');
+                const targetSpot = rookToSquare.querySelector('.piece');
+                
+                this.animatePiece(rookPiece, targetSpot, () => {
+                    targetSpot.textContent = rookPiece.textContent;
+                    rookPiece.textContent = '';
+                });
+            }
+            return;
         }
-    },
-    
-    // Highlight AI's move
-    highlightAIMove(move) {
-        if (!move) return;
         
-        document.querySelectorAll('.ai-move-highlight').forEach(square => {
-            square.classList.remove('ai-move-highlight');
-        });
-        
-        const fromSquare = document.querySelector(
-            `.square[data-row="${move.from_row}"][data-col="${move.from_col}"]`
-        );
-        const toSquare = document.querySelector(
-            `.square[data-row="${move.to_row}"][data-col="${move.to_col}"]`
-        );
-        
-        if (fromSquare && toSquare) {
-            [fromSquare, toSquare].forEach(square => square.classList.add('ai-move-highlight'));
-            
-            const fromPiece = fromSquare.querySelector('.piece');
-            const toPiece = toSquare.querySelector('.piece');
-            const pieceToMove = fromPiece.textContent;
-            
-            this.animatePiece(fromPiece, toPiece, () => {
-                toPiece.textContent = pieceToMove;
-                fromPiece.textContent = '';
+        // For AI moves
+        if (isAI && moveInfo) {
+            document.querySelectorAll('.ai-move-highlight').forEach(square => {
+                square.classList.remove('ai-move-highlight');
             });
             
-            setTimeout(() => {
-                [fromSquare, toSquare].forEach(square => 
-                    square.classList.remove('ai-move-highlight')
-                );
-            }, 2000);
+            const fromSquare = document.querySelector(
+                `.square[data-row="${moveInfo.from_row}"][data-col="${moveInfo.from_col}"]`
+            );
+            const toSquare = document.querySelector(
+                `.square[data-row="${moveInfo.to_row}"][data-col="${moveInfo.to_col}"]`
+            );
+            
+            if (fromSquare && toSquare) {
+                [fromSquare, toSquare].forEach(square => square.classList.add('ai-move-highlight'));
+                
+                const fromPiece = fromSquare.querySelector('.piece');
+                const toPiece = toSquare.querySelector('.piece');
+                const pieceToMove = fromPiece.textContent;
+                
+                this.animatePiece(fromPiece, toPiece, () => {
+                    toPiece.textContent = pieceToMove;
+                    fromPiece.textContent = '';
+                });
+                
+                setTimeout(() => {
+                    [fromSquare, toSquare].forEach(square => 
+                        square.classList.remove('ai-move-highlight')
+                    );
+                }, 2000);
+                
+                // Handle AI castling if applicable
+                if (moveInfo.castling_info) {
+                    setTimeout(() => this.animateMove(moveInfo.castling_info), 300);
+                }
+            }
         }
     }
 };
@@ -243,6 +248,7 @@ const moveHandler = {
         const originalToContent = toPiece.textContent;
         const isCastling = utils.isCastlingAttempt(fromPiece, fromCol, toCol);
         
+        // Handle castling setup
         let castlingState = null;
         if (isCastling) {
             const isQueenside = toCol < fromCol;
@@ -269,12 +275,13 @@ const moveHandler = {
                 originalNewRookSquareContent: newRookSquare.querySelector('.piece').textContent
             };
 
-            // Animate king and rook
+            // Animate king
             animations.animatePiece(fromPiece, toPiece, () => {
                 toPiece.textContent = fromPiece.textContent;
                 fromPiece.textContent = '';
             });
 
+            // Animate rook
             animations.animatePiece(rookPiece, newRookSquare.querySelector('.piece'), () => {
                 newRookSquare.querySelector('.piece').textContent = rookPiece.textContent;
                 rookPiece.textContent = '';
@@ -306,7 +313,30 @@ const moveHandler = {
             gameState.canPlayerMove = true;
 
             if (data.valid) {
-                this.handleValidMove(data);
+                // Display move analysis if available
+                if (data.move_analysis) {
+                    ui.showAnalysis(data.move_analysis, data.ai_move_analysis);
+                }
+
+                // Handle castling if applicable
+                if (data.castling_info) {
+                    setTimeout(() => animations.animateMove(data.castling_info), 300);
+                }
+                
+                if (data.game_over) {
+                    // Handle game over state
+                    ui.setGameOver(data);
+                } else if (data.ai_move) {
+                    // Handle AI's move
+                    animations.animateMove(data.ai_move, true);
+                    
+                    // Update turn indicator and check status
+                    ui.updateTurnIndicator(data.current_turn, data.in_check);
+                    
+                    if (data.in_check) {
+                        ui.showStatus(data.message, true);
+                    }
+                }
             } else {
                 this.revertMove(isCastling, castlingState, fromPiece, toPiece, originalFromContent, originalToContent);
                 ui.showStatus(data.message, false);
@@ -319,40 +349,6 @@ const moveHandler = {
             console.error('Error:', error);
             ui.showStatus('Error making move!', false);
         });
-    },
-    
-    // Handle valid move response
-    handleValidMove(data) {
-        // Display move analysis if available
-        if (data.move_analysis) {
-            ui.showAnalysis(data.move_analysis, data.ai_move_analysis);
-        }
-
-        // Handle castling if applicable
-        if (data.castling_info) {
-            setTimeout(() => animations.animateRook(data.castling_info), 300);
-        }
-        
-        if (data.game_over) {
-            // Handle game over state
-            ui.setGameOver(data);
-        } else {
-            // Handle AI's move if present
-            if (data.ai_move) {
-                animations.highlightAIMove(data.ai_move);
-                // Handle AI castling if applicable
-                if (data.ai_move.castling_info) {
-                    setTimeout(() => animations.animateRook(data.ai_move.castling_info), 600);
-                }
-                
-                // Update turn indicator and check status
-                ui.updateTurnIndicator(data.current_turn, data.in_check);
-                
-                if (data.in_check) {
-                    ui.showStatus(data.message, true);
-                }
-            }
-        }
     },
     
     // Revert move if invalid
@@ -381,29 +377,37 @@ const moveHandler = {
  * Event handlers
  */
 const eventHandlers = {
-    // Handle square click
-    handleSquareClick(e) {
+    // Check if a piece can be moved
+    canMovePiece(pieceContent) {
         if (gameState.isGameOver) {
             ui.showStatus('Game is over! Start a new game.', false);
-            return;
+            return false;
         }
-
+        
+        if (pieceContent.trim() === '') {
+            return false;
+        }
+        
+        const pieceColor = utils.getPieceColor(pieceContent);
+        const currentTurn = document.getElementById('turn-indicator').textContent.split(' ')[0].toLowerCase();
+        
+        if (pieceColor !== currentTurn || pieceColor !== gameState.playerColor) {
+            ui.showStatus(`It's ${currentTurn}'s turn to move!`, false);
+            return false;
+        }
+        
+        return true;
+    },
+    
+    // Handle square click
+    handleSquareClick(e) {
         const clickedSquare = e.target.closest('.square');
         const clickedPiece = clickedSquare.querySelector('.piece');
 
         // First click - Selecting a piece
         if (!gameState.selectedPiece) {
-            // Ignore clicks on empty squares
-            if (clickedPiece.textContent.trim() === '') {
-                return;
-            }
-
-            // Validate piece color and turn
-            const pieceColor = utils.getPieceColor(clickedPiece.textContent);
-            const currentTurn = document.getElementById('turn-indicator').textContent.split(' ')[0].toLowerCase();
-
-            if (pieceColor !== currentTurn || pieceColor !== gameState.playerColor) {
-                ui.showStatus(`It's ${currentTurn}'s turn to move!`, false);
+            // Check if the piece can be moved
+            if (!eventHandlers.canMovePiece(clickedPiece.textContent)) {
                 return;
             }
 
@@ -449,24 +453,11 @@ const eventHandlers = {
     
     // Handle drag start
     handleDragStart(e) {
-        if (gameState.isGameOver) {
-            e.preventDefault();
-            ui.showStatus('Game is over! Start a new game.', false);
-            return;
-        }
-
         const piece = e.target;
-        if (piece.textContent.trim() === '') {
-            e.preventDefault();
-            return;
-        }
-
-        const pieceColor = utils.getPieceColor(piece.textContent);
-        const currentTurn = document.getElementById('turn-indicator').textContent.split(' ')[0].toLowerCase();
         
-        if (pieceColor !== currentTurn || pieceColor !== gameState.playerColor) {
+        // Check if the piece can be moved
+        if (!eventHandlers.canMovePiece(piece.textContent)) {
             e.preventDefault();
-            ui.showStatus(`It's ${currentTurn}'s turn to move!`, false);
             return;
         }
 

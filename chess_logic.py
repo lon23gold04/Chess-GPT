@@ -38,25 +38,17 @@ class ChessGame:
 
     def is_valid_move(self, from_row, from_col, to_row, to_col):
         """Check if a move is valid according to chess rules."""
-        # Basic boundary check
+        # Quick boundary and basic checks
         if not (0 <= from_row < 8 and 0 <= from_col < 8 and 0 <= to_row < 8 and 0 <= to_col < 8):
             return False
         
         piece = self.board[from_row][from_col]
-        if piece == ' ':
+        if piece == ' ' or get_piece_color(piece) != self.current_turn:
             return False
         
-        piece_color = get_piece_color(piece)
-        if piece_color != self.current_turn:
-            return False
-        
-        if not self._is_valid_piece_move(from_row, from_col, to_row, to_col):
-            return False
-        
-        if self._would_be_in_check(from_row, from_col, to_row, to_col):
-            return False
-
-        return True
+        # Check piece-specific rules and if the move would result in check
+        return self._is_valid_piece_move(from_row, from_col, to_row, to_col) and \
+               not self._would_be_in_check(from_row, from_col, to_row, to_col)
 
     def _is_valid_piece_move(self, from_row, from_col, to_row, to_col):
         """Validate move based on piece-specific rules."""
@@ -64,87 +56,72 @@ class ChessGame:
         piece_color = get_piece_color(piece)
         piece_type = get_piece_type(piece)
         
+        # Cannot capture your own piece
         target_piece = self.board[to_row][to_col]
         if target_piece != ' ' and get_piece_color(target_piece) == piece_color:
             return False
         
-        if piece_type == 'pawn':
-            return self._is_valid_pawn_move(from_row, from_col, to_row, to_col, piece_color)
-        elif piece_type == 'knight':
-            return self._is_valid_knight_move(from_row, from_col, to_row, to_col)
-        elif piece_type == 'bishop':
-            return self._is_valid_bishop_move(from_row, from_col, to_row, to_col)
-        elif piece_type == 'rook':
-            return self._is_valid_rook_move(from_row, from_col, to_row, to_col)
-        elif piece_type == 'queen':
-            return self._is_valid_bishop_move(from_row, from_col, to_row, to_col) or \
-                   self._is_valid_rook_move(from_row, from_col, to_row, to_col)
-        elif piece_type == 'king':
-            if abs(to_col - from_col) == 2:  # Castling
+        # Check specific piece rules
+        if piece_type == 'king':
+            # Castling
+            if abs(to_col - from_col) == 2 and from_row == to_row:
                 return True
+            # Normal king move (one square in any direction)
             return abs(to_row - from_row) <= 1 and abs(to_col - from_col) <= 1
+            
+        elif piece_type == 'queen':
+            # Queen moves like bishop or rook
+            is_diagonal = abs(to_row - from_row) == abs(to_col - from_col)
+            is_straight = from_row == to_row or from_col == to_col
+            return (is_diagonal or is_straight) and self._is_path_clear(from_row, from_col, to_row, to_col)
+            
+        elif piece_type == 'rook':
+            # Rook moves straight
+            return (from_row == to_row or from_col == to_col) and \
+                   self._is_path_clear(from_row, from_col, to_row, to_col)
+                   
+        elif piece_type == 'bishop':
+            # Bishop moves diagonally
+            return abs(to_row - from_row) == abs(to_col - from_col) and \
+                   self._is_path_clear(from_row, from_col, to_row, to_col)
+                   
+        elif piece_type == 'knight':
+            # Knight jumps in L-shape
+            row_diff = abs(to_row - from_row)
+            col_diff = abs(to_col - from_col)
+            return (row_diff == 2 and col_diff == 1) or (row_diff == 1 and col_diff == 2)
+            
+        elif piece_type == 'pawn':
+            # Pawn moves
+            direction = -1 if piece_color == 'white' else 1
+            start_row = 6 if piece_color == 'white' else 1
+            
+            # Forward move
+            if from_col == to_col and to_row == from_row + direction and self.board[to_row][to_col] == ' ':
+                return True
+                
+            # Initial two-square move
+            if from_row == start_row and from_col == to_col and to_row == from_row + 2 * direction:
+                return self.board[to_row][to_col] == ' ' and self.board[from_row + direction][from_col] == ' '
+                
+            # Diagonal capture
+            if to_row == from_row + direction and abs(to_col - from_col) == 1:
+                return self.board[to_row][to_col] != ' ' and get_piece_color(self.board[to_row][to_col]) != piece_color
+                
         return False
 
-    def _is_valid_pawn_move(self, from_row, from_col, to_row, to_col, color):
-        """Validate pawn move."""
-        direction = -1 if color == 'white' else 1
-        start_row = 6 if color == 'white' else 1
-        
-        # Forward move
-        if from_col == to_col and to_row == from_row + direction and self.board[to_row][to_col] == ' ':
-            return True
-        
-        # Initial two-square move
-        if from_row == start_row and from_col == to_col and to_row == from_row + 2 * direction:
-            if self.board[to_row][to_col] == ' ' and self.board[from_row + direction][from_col] == ' ':
-                return True
-        
-        # Capture
-        if to_row == from_row + direction and abs(to_col - from_col) == 1:
-            if self.board[to_row][to_col] != ' ' and get_piece_color(self.board[to_row][to_col]) != color:
-                return True
-        
-        return False
-
-    def _is_valid_knight_move(self, from_row, from_col, to_row, to_col):
-        """Validate knight move."""
-        row_diff = abs(to_row - from_row)
-        col_diff = abs(to_col - from_col)
-        return (row_diff == 2 and col_diff == 1) or (row_diff == 1 and col_diff == 2)
-
-    def _is_valid_bishop_move(self, from_row, from_col, to_row, to_col):
-        """Validate bishop move."""
-        if abs(to_row - from_row) != abs(to_col - from_col):
-            return False
-        
-        row_step = 1 if to_row > from_row else -1
-        col_step = 1 if to_col > from_col else -1
+    def _is_path_clear(self, from_row, from_col, to_row, to_col):
+        """Check if the path between two positions is clear of pieces."""
+        row_step = 0 if from_row == to_row else (1 if to_row > from_row else -1)
+        col_step = 0 if from_col == to_col else (1 if to_col > from_col else -1)
         
         current_row, current_col = from_row + row_step, from_col + col_step
-        while current_row != to_row:
+        while current_row != to_row or current_col != to_col:
             if self.board[current_row][current_col] != ' ':
                 return False
             current_row += row_step
             current_col += col_step
-        
-        return True
-
-    def _is_valid_rook_move(self, from_row, from_col, to_row, to_col):
-        """Validate rook move."""
-        if from_row != to_row and from_col != to_col:
-            return False
-        
-        if from_row == to_row:
-            step = 1 if to_col > from_col else -1
-            for col in range(from_col + step, to_col, step):
-                if self.board[from_row][col] != ' ':
-                    return False
-        else:
-            step = 1 if to_row > from_row else -1
-            for row in range(from_row + step, to_row, step):
-                if self.board[row][from_col] != ' ':
-                    return False
-        
+            
         return True
 
     def _would_be_in_check(self, from_row, from_col, to_row, to_col):
@@ -257,37 +234,49 @@ class ChessGame:
             ' ': '1'
         }
         
-        fen_parts = []
+        # Convert board position
+        fen_rows = []
         for row in self.board:
-            empty_squares = 0
-            row_fen = ''
+            empty_count = 0
+            fen_row = ''
+            
             for piece in row:
                 if piece == ' ':
-                    empty_squares += 1
+                    empty_count += 1
                 else:
-                    if empty_squares > 0:
-                        row_fen += str(empty_squares)
-                        empty_squares = 0
-                    row_fen += piece_to_fen[piece]
-            if empty_squares > 0:
-                row_fen += str(empty_squares)
-            fen_parts.append(row_fen)
+                    if empty_count > 0:
+                        fen_row += str(empty_count)
+                        empty_count = 0
+                    fen_row += piece_to_fen[piece]
+            
+            if empty_count > 0:
+                fen_row += str(empty_count)
+            
+            fen_rows.append(fen_row)
         
-        position = '/'.join(fen_parts)
+        position = '/'.join(fen_rows)
+        
+        # Add active color
         turn = 'w' if self.current_turn == 'white' else 'b'
         
-        castling = ''
-        if not self.king_moved['white']:
-            if not self.rook_moved['white'][1]:
-                castling += 'K'
-            if not self.rook_moved['white'][0]:
-                castling += 'Q'
-        if not self.king_moved['black']:
-            if not self.rook_moved['black'][1]:
-                castling += 'k'
-            if not self.rook_moved['black'][0]:
-                castling += 'q'
-        if not castling:
-            castling = '-'
+        # Add castling availability
+        castling_rights = []
         
+        # White castling rights
+        if not self.king_moved['white']:
+            if not self.rook_moved['white'][1]:  # Kingside
+                castling_rights.append('K')
+            if not self.rook_moved['white'][0]:  # Queenside
+                castling_rights.append('Q')
+                
+        # Black castling rights
+        if not self.king_moved['black']:
+            if not self.rook_moved['black'][1]:  # Kingside
+                castling_rights.append('k')
+            if not self.rook_moved['black'][0]:  # Queenside
+                castling_rights.append('q')
+                
+        castling = ''.join(castling_rights) or '-'
+        
+        # Combine all parts (position, active color, castling, en-passant, halfmove, fullmove)
         return f"{position} {turn} {castling} - 0 1" 

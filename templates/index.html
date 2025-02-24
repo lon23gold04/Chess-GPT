@@ -3,63 +3,47 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chess GPT</title>
+    <title>{{ title|default('Chess GPT') }}</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
 </head>
 <body>
-    <!-- Main container -->
     <div class="container">
         <div class="content">
-            <!-- Turn indicator and AI thinking animation -->
+            <!-- Game status area -->
             <div id="turn-container">
-                <div id="turn-indicator">White to move (You are {{ player_color }})</div>
-                <div id="ai-thinking">
-                    <span class="spinner">♟</span>
-                    <span class="text">AI is thinking...</span>
-                </div>
+                <div id="turn-indicator">{{ current_turn|default('White') }} to move (You are {{ player_color }})</div>
+                <div id="ai-thinking"><span class="spinner">♟</span><span class="text">AI is thinking...</span></div>
             </div>
 
-            <!-- Chess board grid -->
+            <!-- Chess board -->
             <div class="chess-board" data-player-color="{{ player_color }}">
                 {% for row in range(8) %}
                     {% for col in range(8) %}
-                        <!-- Chess square with coordinates and piece -->
                         <div class="square {{ 'white' if (row + col) % 2 == 0 else 'black' }}"
-                             data-row="{{ row }}" 
-                             data-col="{{ col }}">
-                            <!-- File labels (a-h) on bottom row -->
-                            {% if row == 7 %}
-                                <span class="coordinate file">{{ ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'][col] }}</span>
-                            {% endif %}
-                            <!-- Rank labels (1-8) on leftmost column -->
-                            {% if col == 0 %}
-                                <span class="coordinate rank">{{ 8 - row }}</span>
-                            {% endif %}
-                            <!-- Chess piece -->
+                             data-row="{{ row }}" data-col="{{ col }}">
+                            {% if row == 7 %}<span class="coordinate file">{{ 'abcdefgh'[col] }}</span>{% endif %}
+                            {% if col == 0 %}<span class="coordinate rank">{{ 8 - row }}</span>{% endif %}
                             <span class="piece" draggable="true">{{ board[row][col] }}</span>
                         </div>
                     {% endfor %}
                 {% endfor %}
             </div>
 
-            <!-- Move status messages -->
             <div id="move-status"></div>
 
-            <!-- Move analysis section -->
+            <!-- Analysis section -->
             <div id="analysis-container">
-                <!-- Player's move analysis -->
                 <div id="player-analysis">
                     <div id="analysis-title">Your Move Analysis:</div>
                     <div id="analysis-content"></div>
                 </div>
-                <!-- AI's move analysis -->
                 <div id="ai-analysis" style="display: none;">
                     <div id="ai-analysis-title">AI Move Analysis:</div>
                     <div id="ai-analysis-content"></div>
                 </div>
             </div>
 
-            <!-- Game control buttons -->
+            <!-- Controls -->
             <div class="status-bar">
                 <div class="game-controls">
                     <button id="new-game-btn" class="game-btn" onclick="startNewGame()">New Game</button>

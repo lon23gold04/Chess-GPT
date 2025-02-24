@@ -31,39 +31,24 @@ def get_ai_move(fen):
 
 def analyze_move(model, board, from_row, from_col, to_row, to_col, is_capture, is_check, engine_analysis=None):
     """Analyze a move using Gemini AI."""
-    files = 'abcdefgh'
-    ranks = '87654321'
+    # Get coordinates and piece information
+    files, ranks = 'abcdefgh', '87654321'
     from_square = f"{files[from_col]}{ranks[from_row]}"
     to_square = f"{files[to_col]}{ranks[to_row]}"
-    
     piece = board[from_row][from_col]
-    if piece == ' ':  # If piece is empty, this might be a castling move
-        # Check if this is a castling move (e1 to g1 or e1 to c1 for white)
-        if from_square == 'e1' and (to_square == 'g1' or to_square == 'c1'):
-            piece_type = 'king'
-            piece_color = 'white'
-        # Check if this is a castling move (e8 to g8 or e8 to c8 for black)
-        elif from_square == 'e8' and (to_square == 'g8' or to_square == 'c8'):
-            piece_type = 'king'
-            piece_color = 'black'
-        else:
-            piece_type = None
-            piece_color = None
-    else:
-        piece_type = get_piece_type(piece)
-        piece_color = get_piece_color(piece)
     
-    board_str = format_board_string(board)
-    move_desc = format_move_description(piece_color, piece_type, from_square, to_square, 
-                                      is_capture, is_check, board, to_row, to_col)
-    engine_info = format_engine_info(engine_analysis)
+    # Handle castling edge case
+    piece_type = get_piece_type(piece) if piece != ' ' else 'king'
+    piece_color = get_piece_color(piece) if piece != ' ' else ('white' if from_row == 7 else 'black')
+    is_castling = piece_type == 'king' and abs(ord(from_square[0]) - ord(to_square[0])) == 2
     
+    # Build the move analysis prompt
     prompt = f"""
     As a chess expert, analyze this move:
-    {move_desc}
-    {engine_info}
+    {_get_move_description(piece_color, piece_type, from_square, to_square, is_castling, is_capture, is_check, board, to_row, to_col)}
+    {_format_engine_info(engine_analysis)}
     
-    {board_str}
+    {_format_board(board)}
     
     Consider:
     1. Strategic value
@@ -71,11 +56,10 @@ def analyze_move(model, board, from_row, from_col, to_row, to_col, is_capture, i
     3. Piece development
     4. Potential threats or opportunities
     
-    Provide a brief, focused analysis incorporating the engine's evaluation if available.
-    Include concrete tactical or positional advantages, and if there's a forced mate sequence.
-    Aim for 2-3 clear, informative sentences.
+    Provide a brief, focused analysis (2-3 sentences) with concrete tactical or positional advantages.
     """
     
+    # Get response from model
     try:
         response = model.generate_content(prompt)
         return response.text
@@ -83,51 +67,43 @@ def analyze_move(model, board, from_row, from_col, to_row, to_col, is_capture, i
         print(f"Error getting move analysis: {e}")
         return "Move analysis unavailable."
 
-def format_board_string(board):
+def _get_move_description(color, type, from_sq, to_sq, is_castling, is_capture, is_check, board, to_row, to_col):
+    """Create a descriptive string of the move for analysis."""
+    if is_castling:
+        castling_type = "O-O" if ord(to_sq[0]) > ord(from_sq[0]) else "O-O-O"
+        desc = f"Move analysis request: {color} {castling_type} (castling)"
+    else:
+        desc = f"Move analysis request: {color} {type} from {from_sq} to {to_sq}"
+        if is_capture:
+            captured = board[to_row][to_col]
+            desc += f", capturing {get_piece_color(captured)} {get_piece_type(captured)}"
+    
+    return desc + (", putting opponent in check" if is_check else "")
+
+def _format_board(board):
     """Format the board state as a string."""
-    board_str = "\nCurrent board position:\n"
+    result = "\nCurrent board position:\n"
     for row in range(8):
-        board_str += f"{8-row} "
+        result += f"{8-row} "
         for col in range(8):
             piece = board[row][col]
-            board_str += f"{piece if piece != ' ' else '.'} "
-        board_str += "\n"
-    board_str += "  a b c d e f g h\n"
-    return board_str
+            result += f"{piece if piece != ' ' else '.'} "
+        result += "\n"
+    return result + "  a b c d e f g h\n"
 
-def format_move_description(piece_color, piece_type, from_square, to_square, 
-                          is_capture, is_check, board, to_row, to_col):
-    """Format the move description."""
-    # Check if move is castling (king moving two squares)
-    is_castling = piece_type == 'king' and abs(ord(from_square[0]) - ord(to_square[0])) == 2
-    
-    if is_castling:
-        # O-O for kingside castling, O-O-O for queenside castling
-        castling_type = "O-O" if ord(to_square[0]) > ord(from_square[0]) else "O-O-O"
-        move_desc = f"Move analysis request: {piece_color} {castling_type} (castling)"
-    else:
-        move_desc = f"Move analysis request: {piece_color} {piece_type} from {from_square} to {to_square}"
-        if is_capture:
-            captured_piece = board[to_row][to_col]
-            captured_type = get_piece_type(captured_piece)
-            move_desc += f", capturing {get_piece_color(captured_piece)} {captured_type}"
-    
-    if is_check:
-        move_desc += ", putting opponent in check"
-    return move_desc
-
-def format_engine_info(engine_analysis):
+def _format_engine_info(engine_analysis):
     """Format the engine analysis information."""
     if not engine_analysis:
         return ""
     
-    engine_info = f"""
+    info = f"""
     Engine Analysis:
     - Description: {engine_analysis.get('text', 'No description available')}
     - Win Probability: {engine_analysis.get('win_chance', 'Not available')}"""
+    
     if engine_analysis.get('mate'):
-        engine_info += f"\n    - Mate in: {engine_analysis['mate']} moves"
-    return engine_info
+        info += f"\n    - Mate in: {engine_analysis['mate']} moves"
+    return info
 
 def get_piece_type(piece):
     """Get the type of a chess piece."""
