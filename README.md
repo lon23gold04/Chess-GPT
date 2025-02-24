@@ -7,7 +7,7 @@
 An elegant web-based chess application featuring an AI opponent and real-time move analysis powered by Google's Gemini AI. Play against a strong chess engine while receiving strategic insights about your moves.
 
 <div align="center">
-  <img src="https://raw.githubusercontent.com/EN10/Chess/main/screenshot.png" width="400" alt="Chess Game Screenshot">
+  <img src="https://github.com/EN10/Chess-GPT/blob/main/screenshot.png" width="400" alt="Chess Game Screenshot">
 </div>
 
 ## Table of Contents
