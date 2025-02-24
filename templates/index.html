@@ -450,7 +450,7 @@
                 selectedSquare = clickedSquare;
                 selectedSquare.classList.add('selected');
             } 
-            // Second click - Moving the piece
+            // Second click - Moving the piece or reselecting
             else {
                 // Prevent making the move if AI is thinking
                 if (!canPlayerMove) {
@@ -464,25 +464,27 @@
                     return;
                 }
 
+                // Check if clicking another piece of the same color
+                const clickedPieceContent = clickedPiece.textContent.trim();
+                if (clickedPieceContent !== '') {
+                    const clickedPieceColor = getPieceColor(clickedPieceContent);
+                    const selectedPieceColor = getPieceColor(selectedPiece.textContent);
+                    
+                    // If clicking another piece of the same color, reselect it
+                    if (clickedPieceColor === selectedPieceColor) {
+                        clearSelection();
+                        selectedPiece = clickedPiece;
+                        selectedSquare = clickedSquare;
+                        selectedSquare.classList.add('selected');
+                        return;
+                    }
+                }
+
                 // Attempt to make the move
                 const fromRow = parseInt(selectedSquare.dataset.row);
                 const fromCol = parseInt(selectedSquare.dataset.col);
                 const toRow = parseInt(clickedSquare.dataset.row);
                 const toCol = parseInt(clickedSquare.dataset.col);
-
-                // Check if the destination square is empty or contains an opponent's piece
-                const destinationPiece = clickedSquare.querySelector('.piece').textContent.trim();
-                if (destinationPiece !== '') {
-                    const destinationPieceColor = getPieceColor(destinationPiece);
-                    const selectedPieceColor = getPieceColor(selectedPiece.textContent);
-                    
-                    // If destination has a piece of the same color, invalid move
-                    if (destinationPieceColor === selectedPieceColor) {
-                        showMoveStatus('Invalid move! Cannot capture your own piece.', false);
-                        clearSelection();
-                        return;
-                    }
-                }
 
                 makeMove(fromRow, fromCol, toRow, toCol, selectedPiece, clickedSquare.querySelector('.piece'));
                 clearSelection();
