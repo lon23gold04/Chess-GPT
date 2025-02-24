@@ -22,15 +22,6 @@
             box-sizing: border-box;
         }
 
-        /* Header styling */
-        .header {
-            background-color: #ffffff;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            padding: 1rem;
-            text-align: center;
-            margin-bottom: 2rem;
-        }
-
         /* Main content area */
         .content {
             background-color: #ffffff;
@@ -78,8 +69,8 @@
         }
 
         /* Chess board colors */
-        .white { background-color: #f0d9b5; }  /* Light squares */
-        .black { background-color: #b58863; }  /* Dark squares */
+        .white { background-color: #f0e9d5; }  /* Cream squares */
+        .black { background-color: #769656; }  /* Green squares */
 
         /* Board coordinates */
         .coordinate {
@@ -126,7 +117,7 @@
             left: 0;
             right: 0;
             bottom: 0;
-            background-color: rgba(144, 238, 144, 0.6);  /* Light green highlight */
+            background-color: rgba(187, 203, 43, 0.4);  /* Semi-transparent yellow-green */
             pointer-events: none;
         }
 
@@ -196,9 +187,10 @@
 
         /* Game controls and buttons */
         .game-controls {
-            margin-top: 1rem;
             display: flex;
-            gap: 1rem;
+            justify-content: center;  /* Center horizontally */
+            align-items: center;      /* Center vertically */
+            width: 100%;             /* Take full width of status bar */
         }
         .game-btn {
             padding: 0.5rem 1rem;
@@ -231,8 +223,8 @@
             width: 100%;
             max-width: 480px;
             display: flex;
-            justify-content: space-between;
-            align-items: center;
+            justify-content: center;  /* Center horizontally */
+            align-items: center;      /* Center vertically */
         }
 
         /* Move analysis containers */
@@ -275,8 +267,6 @@
             /* Tablet and large phone adjustments */
             .container { padding: 0.5rem; }
             .content { padding: 0.5rem; }
-            .header { margin-bottom: 1rem; }
-            h1 { font-size: 1.5rem; margin-bottom: 0.5rem; }
             p { margin-bottom: 1rem; }
             .coordinate { font-size: 10px; }
             #analysis-container { padding: 0.5rem; }
@@ -323,25 +313,17 @@
     </style>
 </head>
 <body>
-    <!-- Page header -->
-    <div class="header">
-        <h1>{{ title }}</h1>
-    </div>
-
     <!-- Main container -->
     <div class="container">
         <div class="content">
             <!-- Turn indicator and AI thinking animation -->
             <div id="turn-container">
-                <div id="turn-indicator">White to move</div>
+                <div id="turn-indicator">White to move (You are {{ player_color }})</div>
                 <div id="ai-thinking">
                     <span class="spinner">♟</span>
                     <span class="text">AI is thinking...</span>
                 </div>
             </div>
-
-            <!-- Player color message -->
-            <p>{{ message }}</p>
 
             <!-- Chess board grid -->
             <div class="chess-board" data-player-color="{{ player_color }}">
@@ -387,7 +369,6 @@
             <div class="status-bar">
                 <div class="game-controls">
                     <button id="new-game-btn" class="game-btn" onclick="startNewGame()">New Game</button>
-                    <button id="resign-btn" class="game-btn" onclick="resignGame()">Resign</button>
                 </div>
             </div>
         </div>
@@ -792,7 +773,7 @@
                 turnIndicator.classList.add('game-over');
                 turnIndicator.classList.remove('in-check');
                 showMoveStatus(data.message, true);
-                document.getElementById('resign-btn').disabled = true;
+                document.getElementById('new-game-btn').disabled = true;
             } else {
                 // Handle AI's move if present
                 if (data.ai_move) {
@@ -802,7 +783,7 @@
                         setTimeout(() => animateRookMove(data.ai_move.castling_info), 600);
                     }
                     turnIndicator.textContent = 
-                        `${data.current_turn.charAt(0).toUpperCase() + data.current_turn.slice(1)} to move`;
+                        `${data.current_turn.charAt(0).toUpperCase() + data.current_turn.slice(1)} to move (You are ${playerColor})`;
                     
                     // Update check status
                     if (data.in_check) {
@@ -864,30 +845,6 @@
                 return;
             }
             location.reload();
-        }
-
-        /**
-         * Handles game resignation
-         * Confirms with user and updates game state
-         */
-        function resignGame() {
-            if (isGameOver) return;
-            
-            if (confirm('Are you sure you want to resign?')) {
-                isGameOver = true;
-                const turnIndicator = document.getElementById('turn-indicator');
-                const winner = playerColor === 'white' ? 'Black' : 'White';
-                turnIndicator.textContent = `${winner} wins by resignation!`;
-                turnIndicator.classList.add('game-over');
-                turnIndicator.classList.remove('in-check');
-                showMoveStatus(`Game Over! ${winner} wins by resignation!`, true);
-                document.getElementById('resign-btn').disabled = true;
-                
-                // Auto-restart after delay
-                setTimeout(() => {
-                    location.reload();
-                }, 2000);
-            }
         }
 
         /**
@@ -998,7 +955,7 @@
         }
 
         // Initialize game state and event listeners
-        document.getElementById('resign-btn').disabled = isGameOver;
+        document.getElementById('new-game-btn').disabled = isGameOver;
 
         // Add click handlers for squares
         document.querySelectorAll('.square').forEach(square => {
