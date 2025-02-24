@@ -1,16 +1,13 @@
 # Chess GPT
 
 [![License: CC BY-NC-SA 4.0](https://img.shields.io/badge/License-CC%20BY--NC--SA%204.0-lightgrey.svg)](LICENSE)
-[![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)](https://github.com/EN10/Chess/releases)
+[![Version](https://img.shields.io/badge/version-1.1.0-blue.svg)](https://github.com/EN10/Chess)
 [![Python 3.9+](https://img.shields.io/badge/python-3.9+-blue.svg)](https://www.python.org/downloads/)
-[![Commit](https://img.shields.io/badge/commit-0de07d5-orange.svg)](https://github.com/EN10/Chess/commit/0de07d5)
 
-A sophisticated web-based chess application featuring an AI opponent and real-time move analysis. Play against a strong chess engine while receiving strategic insights from both Stockfish analysis and Google's Gemini AI.
-
-[🎮 Play Now](https://chess-gpt.vercel.app) | [📖 Documentation](https://github.com/EN10/Chess/wiki)
+An elegant web-based chess application featuring an AI opponent and real-time move analysis powered by Google's Gemini AI. Play against a strong chess engine while receiving strategic insights about your moves.
 
 <div align="center">
-  <img src="https://raw.githubusercontent.com/EN10/Chess-GPT/refs/heads/main/image.png" width="400" alt="Chess Game Screenshot">
+  <img src="https://raw.githubusercontent.com/EN10/Chess/main/screenshot.png" width="400" alt="Chess Game Screenshot">
 </div>
 
 ## Table of Contents
@@ -28,45 +25,42 @@ A sophisticated web-based chess application featuring an AI opponent and real-ti
 ## Key Features
 
 ### Chess Gameplay
-- Play as White or Black against an International Master level AI
+- Play as White or Black against a sophisticated AI opponent
 - Intuitive drag-and-drop or click-based piece movement
-- Real-time move validation and legal move checking
+- Real-time move validation with legal move checking
 - Visual feedback for selected pieces and AI moves
-- Automatic detection of check, checkmate, and game over
-- Resign option with confirmation
+- Automatic detection of check, checkmate, and game over states
+- Castling support with animated visual feedback
+- Responsive design that works across devices
 
 ### AI Integration
-- **Chess Engine**: Powered by chess-api.com using Stockfish
-  - International Master playing strength
-  - Stockfish 17 NNUE with 32 vCore computing power
-  - Depth 12 analysis for strong tactical play
+- **Chess Engine**: Powered by external chess API
+  - Strong tactical play with depth 12 analysis
   - Fast move calculation
-  - No API key required
+  - Supports all chess rules including castling
 
-- **Move Analysis**: Powered by Stockfish & Google's Gemini AI
-  - Stockfish engine for deep tactical analysis
-  - Gemini AI for natural language insights
-  - Strategic evaluation of every move
-  - Tactical opportunity identification
-  - Clear natural language explanations
+- **Move Analysis**: Powered by Google's Gemini AI
+  - Tactical and strategic evaluation of every move
+  - Natural language insights that explain chess concepts
   - Context-aware game state analysis
+  - Personalized feedback for both player and AI moves
 
 ### User Interface
 - Clean, modern responsive design
-- Works on desktop and mobile devices
-- Visual move highlighting
-- Coordinates display
+- Smooth animations for piece movement and captures
+- Visual move highlighting for both player and AI moves
+- Board coordinates display
 - Turn indicator with AI thinking animation
 - Move analysis display panel
 - Game status messages
-- Landscape mode optimization for tablets
+- Optimized for both portrait and landscape orientations
 
 ## Quick Start
 
 1. **Clone the Repository**
    ```bash
-   git clone <repository-url>
-   cd chess-game
+   git clone https://github.com/EN10/Chess.git
+   cd Chess
    ```
 
 2. **Install Dependencies**
@@ -99,20 +93,19 @@ A sophisticated web-based chess application featuring an AI opponent and real-ti
 1. **Start a Game**
    - Visit the homepage
    - Choose to play as White or Black
-   - White moves first
+   - If you choose Black, the AI will make the first move
 
 2. **Make Moves**
    - **Drag and Drop**: Click and drag pieces to move them
    - **Click-Based**: Click a piece then click destination
-   - Invalid moves are automatically rejected
-   - Visual feedback shows selected pieces and valid moves
+   - Invalid moves are automatically rejected with feedback
+   - Visual highlights show selected pieces and most recent moves
 
 3. **Game Features**
-   - Move analysis appears after each move
+   - AI generated move analysis appears after each move
    - AI thinking status is shown during calculations
-   - Check is indicated with a yellow highlight
-   - Resign button available for ending the game
-   - New Game button to start fresh
+   - Check status is indicated in the turn display
+   - Start a new game anytime with the New Game button
 
 ## Technical Details
 
@@ -122,46 +115,46 @@ A sophisticated web-based chess application featuring an AI opponent and real-ti
 - **Google Generative AI** (0.3.2): Gemini AI integration
 
 ### Architecture
-- Python backend with Flask
-- RESTful API design
-- Vanilla JavaScript frontend
-- Responsive CSS with flexbox/grid
-- WebSocket-ready for future real-time features
-- Vercel serverless deployment
+- Python backend with Flask for server-side logic
+- Chess logic implemented in a dedicated module
+- RESTful API design for move validation and AI interaction
+- Vanilla JavaScript frontend with modular design
+- Pure CSS for responsive styling and animations
+- Vercel-ready for serverless deployment
 
-### Deployment
-- Automatic deployment via Vercel
-- Serverless Python runtime
-- Auto-scaling and high availability
-- Global CDN distribution
-- Zero-configuration setup
-
-### Security
-- Environment-based API key management
-- HTTPS for API communications
-- Input validation on all moves
-- Safe error handling
+### Core Components
+- `app.py`: Main application with Flask routes
+- `chess_logic.py`: Chess rules implementation
+- `ai_engine.py`: AI move generation and analysis
+- `static/chess.js`: Client-side game interaction
+- `static/styles.css`: Responsive styling
+- `templates/`: HTML templates for game interface
 
 ## Development
 
-### Code Structure
+### Project Structure
 ```
-chess-game/
+Chess/
 ├── app.py              # Main application logic
+├── chess_logic.py      # Chess rules and game state
+├── ai_engine.py        # AI integration
 ├── requirements.txt    # Python dependencies
+├── static/
+│   ├── chess.js        # Client-side game logic
+│   └── styles.css      # UI styling
 ├── templates/         
-│   ├── index.html     # Game interface
+│   ├── index.html      # Game interface
 │   └── color_select.html # Color selection page
-├── vercel.json        # Vercel deployment config
+├── vercel.json         # Vercel deployment config
 └── README.md
 ```
 
 ### Adding Features
 1. Fork the repository
 2. Create a feature branch
-3. Implement changes
-4. Add tests if applicable
-5. Submit a pull request
+3. Implement changes following the existing code structure
+4. Test thoroughly on different devices
+5. Submit a pull request with detailed description
 
 ## Troubleshooting
 
@@ -169,45 +162,50 @@ chess-game/
 1. **API Key Error**
    - Ensure GEMINI_API_KEY is properly exported
    - Check for typos in the key
-   - Verify API key is active
+   - Verify API key is active in Google AI Studio
 
 2. **Move Validation**
    - All standard chess rules are enforced
    - Kings cannot move into check
-   - Pawns promote automatically to queens
+   - Special moves like castling require proper conditions
 
-3. **Connection Issues**
-   - Check internet connection
-   - Verify chess-api.com is accessible
-   - Ensure port 5000 is available
+3. **Display Issues**
+   - For responsive display problems, try different orientations
+   - Clear browser cache if animations aren't displaying properly
+   - Ensure JavaScript is enabled in your browser
 
 ## Future Enhancements
 
 - [ ] Multiple AI difficulty levels
-- [ ] PGN game export
-- [ ] Opening book integration
-- [ ] Multiplayer support
-- [ ] Game history and analysis
-- [ ] Custom board themes
-- [ ] Sound effects
-- [ ] Touch device optimizations
+- [ ] PGN game export and import
+- [ ] Opening book recognition
+- [ ] Multiplayer support with WebSockets
+- [ ] Game history and replay functionality
+- [ ] Custom board themes and piece designs
+- [ ] Sound effects for moves and captures
+- [ ] Advanced touch device optimizations
 
 ## Version History
+
+### v1.1.0
+- Improved move animations
+- Enhanced AI analysis with Gemini 2.0
+- Responsive design improvements
+- Bug fixes for castling and UI interactions
 
 ### v1.0.0
 - Initial release
 - Complete chess game implementation
 - AI opponent integration
 - Gemini-powered move analysis
-- Vercel deployment setup
 
 ## Contributing
 
-We welcome contributions! Here's how you can help:
-- Report bugs
-- Suggest features
-- Submit pull requests
-- Improve documentation
+Contributions are welcome! Here's how you can help:
+- Report bugs by opening issues
+- Suggest features or improvements
+- Submit pull requests with code improvements
+- Improve documentation or examples
 
 ## License
 
@@ -215,6 +213,7 @@ This project is licensed under [Creative Commons Attribution-NonCommercial-Share
 
 ## Acknowledgments
 
-- Chess Engine provided by [chess-api.com](https://chess-api.com) (powered by Stockfish)
-- Move analysis powered by [Stockfish](https://stockfishchess.org/) and [Google Gemini AI](https://makersuite.google.com)
+- Chess Engine provided by external chess API
+- Move analysis powered by [Google Gemini AI](https://makersuite.google.com)
 - Chess piece Unicode characters for the game board
+- The Python Chess community for inspiration
