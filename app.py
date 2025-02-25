@@ -1,13 +1,16 @@
 from flask import Flask, render_template, jsonify, request
 import os
+from dotenv import load_dotenv
 import google.generativeai as genai
 from chess_logic import ChessGame
 from ai_engine import get_ai_move, analyze_move
 
+load_dotenv()
+
 app = Flask(__name__)
 
 # Configure Gemini API
-GEMINI_API_KEY = os.environ.get('GEMINI_API_KEY')
+GEMINI_API_KEY = os.getenv('GEMINI_API_KEY')
 if not GEMINI_API_KEY:
     raise ValueError("Missing GEMINI_API_KEY environment variable")
 
@@ -41,8 +44,14 @@ def select_color(color):
                          board=game.board,
                          player_color=color)
 
+last_moves = [None, None]
+
 @app.route('/move', methods=['POST'])
 def move():
+    
+    if last_moves[1] != None:
+        last_moves[0] = last_moves[1][:]
+    
     # Quick validation checks
     if game.game_over:
         return jsonify({
@@ -50,25 +59,38 @@ def move():
             'current_turn': game.current_turn,
             'game_over': True,
             'winner': game.winner,
-            'message': f'Game is over! {game.winner} has won!'
+            'message': f'Game is over! {game.winner} has won!',
+            'reverting_move': True
         })
     
     if not game.is_player_turn:
         return jsonify({
             'valid': False,
-            'message': "It's the AI's turn to move"
+            'message': "It's the AI's turn to move",
+            'reverting_move': True
         })
     
     # Process player's move
     data = request.get_json()
     from_row, from_col, to_row, to_col = [data.get(k) for k in ('from_row', 'from_col', 'to_row', 'to_col')]
     
+    last_moves[1] = [from_row, from_col, to_row, to_col]
+    
+    if last_moves[1] == last_moves[0]: # reverting invalid move
+        return jsonify({
+            'valid': False,
+            'current_turn': game.current_turn,
+            'message': 'Invalid move! Please check piece movement rules.',
+            'reverting_move': True
+        })
+    
     # Validate move
     if not game.is_valid_move(from_row, from_col, to_row, to_col):
         return jsonify({
             'valid': False,
             'current_turn': game.current_turn,
-            'message': 'Invalid move! Please check piece movement rules.'
+            'message': 'Invalid move! Please check piece movement rules.',
+            'reverting_move': False
         })
     
     # Save the original piece information before the move
@@ -105,6 +127,7 @@ def move():
         'game_over': game.game_over,
         'winner': game.winner,
         'in_check': game._is_in_check(game.current_turn, game.board),
+        'reverting_move': False
     }
     
     # Process AI's move if game is still ongoing
