@@ -5,12 +5,10 @@ import google.generativeai as genai
 from chess_logic import ChessGame
 from ai_engine import get_ai_move, analyze_move
 
-load_dotenv()
-
 app = Flask(__name__)
 
 # Configure Gemini API
-GEMINI_API_KEY = os.getenv('GEMINI_API_KEY')
+GEMINI_API_KEY = os.environ.get('GEMINI_API_KEY')
 if not GEMINI_API_KEY:
     raise ValueError("Missing GEMINI_API_KEY environment variable")
 
@@ -60,14 +58,14 @@ def move():
             'game_over': True,
             'winner': game.winner,
             'message': f'Game is over! {game.winner} has won!',
-            'reverting_move': True
+            'reverting_move': False
         })
     
     if not game.is_player_turn:
         return jsonify({
             'valid': False,
             'message': "It's the AI's turn to move",
-            'reverting_move': True
+            'reverting_move': False
         })
     
     # Process player's move
