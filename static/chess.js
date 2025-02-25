@@ -338,7 +338,10 @@ const moveHandler = {
                     }
                 }
             } else {
-                this.revertMove(isCastling, castlingState, fromPiece, toPiece, originalFromContent, originalToContent);
+                this.revertMove(isCastling, castlingState, fromPiece, toPiece, originalFromContent, originalToContent); // TODO
+                if (!data.reverting_move) {
+                    this.makeMove(fromRow, fromCol, toRow, toCol, toPiece, fromPiece)
+                }
                 ui.showStatus(data.message, false);
             }
         })
@@ -353,7 +356,8 @@ const moveHandler = {
     
     // Revert move if invalid
     revertMove(isCastling, castlingState, fromPiece, toPiece, originalFromContent, originalToContent) {
-        if (isCastling && castlingState) {
+        if (isCastling) {
+            console.log("Castling")
             fromPiece.textContent = castlingState.originalKingContent;
             toPiece.textContent = castlingState.originalKingSquareContent;
             
@@ -367,8 +371,9 @@ const moveHandler = {
                 }
             );
         } else {
+            console.log("Not castling")
             fromPiece.textContent = originalFromContent;
-            toPiece.textContent = originalToContent;
+            toPiece.textContent = originalToContent; // TODO
         }
     }
 };
