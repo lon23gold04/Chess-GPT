@@ -1,6 +1,5 @@
 from flask import Flask, render_template, jsonify, request
 import os
-from dotenv import load_dotenv
 import google.generativeai as genai
 from chess_logic import ChessGame
 from ai_engine import get_ai_move, analyze_move
